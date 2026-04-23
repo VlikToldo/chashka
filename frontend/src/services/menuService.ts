@@ -1,0 +1,45 @@
+import axios from "axios";
+import type { PublicSection, MenuItem } from "../types/menu";
+import type { AboutBlock } from "../types/about";
+import type { VenueInfo } from "../types/admin";
+
+const BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : "/api";
+
+const api = axios.create({ baseURL: BASE });
+
+export const menuService = {
+  getSections: async (): Promise<PublicSection[]> => {
+    const { data } = await api.get<PublicSection[]>("/sections");
+    return data;
+  },
+
+  getBySection: async (sectionId: string): Promise<MenuItem[]> => {
+    const { data } = await api.get<MenuItem[]>("/menu", {
+      params: { sectionId },
+    });
+    return data;
+  },
+};
+
+export const aboutService = {
+  getBlocks: async (): Promise<AboutBlock[]> => {
+    const { data } = await api.get<AboutBlock[]>("/about");
+    return data;
+  },
+};
+
+export const coverPhotoService = {
+  getPhoto: async (): Promise<string | null> => {
+    const { data } = await api.get<{ image: string }>("/cover-photo");
+    return data.image ?? null;
+  },
+};
+
+export const venueService = {
+  getVenue: async (): Promise<VenueInfo> => {
+    const { data } = await api.get<VenueInfo>("/venue");
+    return data;
+  },
+};

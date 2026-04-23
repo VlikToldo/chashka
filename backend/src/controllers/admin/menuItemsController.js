@@ -1,0 +1,90 @@
+import MenuItem from "../../models/MenuItem.js";
+import { translateToAllLanguages } from "../../services/translationService.js";
+
+export async function getMenuItems(_req, res) {
+  const items = await MenuItem.find().sort({ order: 1 });
+  res.json(items);
+}
+
+export async function createMenuItem(req, res) {
+  const {
+    sectionId,
+    name,
+    price,
+    ingredients,
+    allergens,
+    yield: yld,
+    order,
+  } = req.body;
+  if (!sectionId || !name || !price)
+    return res
+      .status(400)
+      .json({ error: "sectionId, name and price required" });
+
+  const [translatedName, translatedIngredients, translatedAllergens, translatedYield] =
+    await Promise.all([
+      translateToAllLanguages(name),
+      translateToAllLanguages(ingredients),
+      translateToAllLanguages(allergens),
+      translateToAllLanguages(yld),
+    ]);
+
+  const item = await MenuItem.create({
+    sectionId,
+    name: translatedName,
+    price,
+    ingredients: translatedIngredients,
+    allergens: translatedAllergens,
+    yield: translatedYield,
+    order,
+  });
+  res.status(201).json(item);
+}
+
+export async function updateMenuItem(req, res) {
+  const { name, price, ingredients, allergens, yield: yld, sectionId, order } = req.body;
+  const update = {};
+
+  if (sectionId !== undefined) update.sectionId = sectionId;
+  if (price !== undefined) update.price = price;
+  if (order !== undefined) update.order = order;
+
+  const translationFields = [
+    ["name", name],
+    ["ingredients", ingredients],
+    ["allergens", allergens],
+    ["yield", yld],
+  ];
+
+  await Promise.all(
+    translationFields
+      .filter(([, val]) => val !== undefined)
+      .map(async ([key, val]) => {
+        update[key] = await translateToAllLanguages(val);
+      }),
+  );
+
+  const item = await MenuItem.findByIdAndUpdate(req.params.id, update, {
+    new: true,
+  });
+  if (!item) return res.status(404).json({ error: "Not found" });
+  res.json(item);
+}
+
+export async function deleteMenuItem(req, res) {
+  const item = await MenuItem.findByIdAndDelete(req.params.id);
+  if (!item) return res.status(404).json({ error: "Not found" });
+  res.json({ success: true });
+}
+
+export async function uploadMenuItemImage(req, res) {
+  if (!req.file) return res.status(400).json({ error: "No image provided" });
+  const imageUrl = req.file.path; // Cloudinary URL
+  const item = await MenuItem.findByIdAndUpdate(
+    req.params.id,
+    { image: imageUrl },
+    { new: true },
+  );
+  if (!item) return res.status(404).json({ error: "Not found" });
+  res.json({ image: imageUrl });
+}

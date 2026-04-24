@@ -93,7 +93,7 @@ export default function WorkingHoursManager() {
     setVenueError(null);
     try {
       const updated = await adminService.updateVenue({
-        address: addressInput as unknown as VenueInfo["address"],
+        address: addressInput,
         phone: venue.phone,
       });
       setVenue(updated);
@@ -137,8 +137,10 @@ export default function WorkingHoursManager() {
     setError(null);
     try {
       await adminService.updateWorkingHours(slots);
+      refreshVenue();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+      showToast(c.saved, "success");
     } catch {
       setError(c.errorSave);
     } finally {
@@ -191,7 +193,7 @@ export default function WorkingHoursManager() {
           {slots.map((slot, idx) => (
             <div
               key={slot.id}
-              className="border border-border/50 p-4 space-y-4"
+              className="border border-border/50 rounded-lg p-4 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs tracking-wide uppercase text-muted-foreground">
@@ -215,7 +217,7 @@ export default function WorkingHoursManager() {
                       key={day}
                       type="button"
                       onClick={() => toggleDay(slot.id, day)}
-                      className={`px-2.5 py-1 text-xs transition-colors ${
+                      className={`px-2.5 py-1 text-xs rounded transition-colors ${
                         slot.days.includes(day)
                           ? "bg-foreground text-background"
                           : "border border-border text-muted-foreground hover:border-foreground"

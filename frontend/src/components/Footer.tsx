@@ -1,11 +1,16 @@
 import { Instagram, MapPin, Clock, Heart, Phone } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useVenue } from '../context/VenueContext'
+import { formatSlots } from '../utils/formatSchedule'
+import type { DayKey } from '../types/admin'
 
 export default function Footer() {
   const { t, lang } = useLanguage()
-  const { venue } = useVenue()
+  const { venue, slots } = useVenue()
   const address = venue.address[lang]
+  const schedule = slots.length > 0
+    ? formatSlots(slots, t.admin.days as Record<DayKey, string>)
+    : t.footer.schedule as string[]
 
   return (
     <footer id="contact" className="bg-primary/10 mt-20">
@@ -47,7 +52,7 @@ export default function Footer() {
               <span className="text-sm font-medium tracking-wide">{t.footer.hours}</span>
             </div>
             <div className="text-sm text-muted-foreground leading-relaxed">
-              {t.footer.schedule.map((line: string, i: number) => (
+              {schedule.map((line: string, i: number) => (
                 <p key={i}>{line}</p>
               ))}
             </div>

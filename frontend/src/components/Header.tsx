@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Instagram, MapPin } from "lucide-react";
+import Loader from "./ui/Loader";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { useVenue } from "../context/VenueContext";
@@ -104,7 +105,7 @@ export default function Header() {
         <Link to="/" className="flex flex-col items-center mx-auto md:mx-0">
           <div className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center relative">
             {logoLoading ? (
-              <div className="w-8 h-8 rounded-full border-2 border-border border-t-foreground animate-spin" />
+              <Loader size={28} className="py-0" />
             ) : logoSrc ? (
               <div style={getWrapperStyle(logoPos)}>
                 <img

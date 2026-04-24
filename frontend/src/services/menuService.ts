@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { PublicSection, MenuItem } from "../types/menu";
 import type { AboutBlock } from "../types/about";
-import type { VenueInfo } from "../types/admin";
+import type { VenueInfo, TimeSlot } from "../types/admin";
 
 const BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
@@ -63,5 +63,9 @@ export const venueService = {
   getVenue: async (): Promise<VenueInfo> => {
     const { data } = await api.get<VenueInfo>("/venue");
     return data;
+  },
+  getWorkingHours: async (): Promise<TimeSlot[]> => {
+    const { data } = await api.get<{ slots: TimeSlot[] }>("/working-hours");
+    return data.slots ?? [];
   },
 };

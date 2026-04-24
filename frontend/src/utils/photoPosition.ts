@@ -67,7 +67,7 @@ export const imgStyle: CSSProperties = {
   display: "block",
   width: "100%",
   height: "100%",
-  objectFit: "fill",
+  objectFit: "cover",
   pointerEvents: "none",
   userSelect: "none",
 };

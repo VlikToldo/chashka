@@ -1,4 +1,5 @@
 import { useState, useEffect, memo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -55,10 +56,11 @@ export default function MenuPage() {
 
   const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
   useSeoMeta({
-    title: `${t.hero.title} | CHASHKA`,
+    title: `CHASHKA | ${t.hero.subtitle} — El Campello, Valencia`,
     description: t.hero.description,
     ogImage: `${siteUrl}/images/logo.png`,
     canonical: `${siteUrl}/`,
+    lang,
   });
 
   return (
@@ -67,7 +69,12 @@ export default function MenuPage() {
 
       {/* Hero */}
       <section className="relative py-20 md:py-32 px-6 text-center">
-        <div className="max-w-7xl mx-auto">
+        <motion.div
+          className="max-w-7xl mx-auto"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
           <p className="text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
             {t.hero.subtitle}
           </p>
@@ -77,7 +84,13 @@ export default function MenuPage() {
           <p className="text-lg md:text-xl text-muted-foreground font-light max-w-xl mx-auto">
             {t.hero.description}
           </p>
-        </div>
+          <Link
+            to="/about"
+            className="inline-block mt-8 text-xs tracking-[0.25em] uppercase text-muted-foreground/60 hover:text-foreground border-b border-transparent hover:border-foreground/30 transition-all duration-300"
+          >
+            {t.nav.about}
+          </Link>
+        </motion.div>
       </section>
 
       {/* Food / Drinks toggle */}
@@ -156,7 +169,7 @@ export default function MenuPage() {
               </h2>
               <div className="max-w-3xl mx-auto">
                 {categoryExtras.map((item) => (
-                  <ExtraRow key={item._id ?? String(item.name)} item={item} />
+                  <ExtraRow key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en} item={item} />
                 ))}
               </div>
             </motion.div>

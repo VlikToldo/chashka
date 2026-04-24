@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Reorder } from "framer-motion";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { Pencil, Trash2, Plus, Loader2, GripVertical } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
@@ -13,6 +14,7 @@ import ConfirmModal from "../ui/ConfirmModal";
 import CustomSelect from "../ui/CustomSelect";
 import type { Section, AdminMenuItem } from "../../types/admin";
 import type { LocalizedString } from "../../types/menu";
+import type { Lang } from "../../i18n/translations";
 
 const EMPTY_NAME: LocalizedString = { uk: "", en: "", es: "" };
 const EMPTY_EXTRA = {
@@ -23,9 +25,84 @@ const EMPTY_EXTRA = {
   priceCurrency: "€",
 };
 
+function SectionRow({
+  s,
+  lang,
+  onEdit,
+  onDelete,
+  onGripPointerDown,
+}: {
+  s: Section;
+  lang: Lang;
+  onEdit: (s: Section) => void;
+  onDelete: (id: string) => void;
+  onGripPointerDown: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 py-3 border-b border-border/50 last:border-b-0">
+      <GripVertical
+        size={14}
+        className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
+        onPointerDown={onGripPointerDown}
+      />
+      <span className="flex-1 text-sm">{localize(s.name, lang)}</span>
+      <Button variant="ghost" onClick={() => s._id && onEdit(s)} className="p-1">
+        <Pencil size={14} />
+      </Button>
+      <Button variant="ghost-danger" onClick={() => s._id && onDelete(s._id)} className="p-1">
+        <Trash2 size={14} />
+      </Button>
+    </div>
+  );
+}
+
+function ReorderColumn({
+  items,
+  category,
+  emptyText,
+  lang,
+  onReorder,
+  onEdit,
+  onDelete,
+  onGripPointerDown,
+}: {
+  items: Section[];
+  category: "food" | "drinks";
+  emptyText: string;
+  lang: Lang;
+  onReorder: (category: "food" | "drinks", newOrder: Section[]) => void;
+  onEdit: (s: Section) => void;
+  onDelete: (id: string) => void;
+  onGripPointerDown: () => void;
+}) {
+  return items.length === 0 ? (
+    <p className="py-3 text-sm text-muted-foreground">{emptyText}</p>
+  ) : (
+    <Reorder.Group
+      axis="y"
+      values={items}
+      onReorder={(newOrder) => onReorder(category, newOrder)}
+      className="space-y-0"
+    >
+      {items.map((s) => (
+        <Reorder.Item key={s._id} value={s} className="list-none">
+          <SectionRow
+            s={s}
+            lang={lang}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onGripPointerDown={onGripPointerDown}
+          />
+        </Reorder.Item>
+      ))}
+    </Reorder.Group>
+  );
+}
+
 export default function SectionManager() {
   const { lang, t } = useLanguage();
   const { showToast } = useToast();
+  const { startAutoScroll } = useAutoScroll();
   const a = t.admin.sections;
   const c = t.admin.common;
 
@@ -111,7 +188,10 @@ export default function SectionManager() {
 
   const handleSaveSection = async () => {
     const filled = countFilled(modalName);
-    if (filled === 0) return;
+    if (filled === 0) {
+      showToast(c.errorSave, "error");
+      return;
+    }
     if (filled === 2) {
       showToast(c.langWarning, "warning");
       return;
@@ -147,12 +227,18 @@ export default function SectionManager() {
   const handleAddExtra = async () => {
     if (!activeSectionId) return;
     const filled = countFilled(newExtra.name);
-    if (filled === 0) return;
+    if (filled === 0) {
+      showToast(c.errorSave, "error");
+      return;
+    }
     if (filled === 2) {
       showToast(c.langWarning, "warning");
       return;
     }
-    if (!newExtra.priceAmount.trim()) return;
+    if (!newExtra.priceAmount.trim()) {
+      showToast(c.errorSave, "error");
+      return;
+    }
     setAddingExtra(true);
     try {
       const yldStr = newExtra.yieldAmount.trim()
@@ -224,54 +310,6 @@ export default function SectionManager() {
 
   if (loading) return <Loader />;
 
-  const SectionRow = ({ s }: { s: Section }) => (
-    <div className="flex items-center gap-2 py-3 border-b border-border/50 last:border-b-0">
-      <GripVertical
-        size={14}
-        className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
-      />
-      <span className="flex-1 text-sm">{localize(s.name, lang)}</span>
-      <Button
-        variant="ghost"
-        onClick={() => s._id && openEdit(s)}
-        className="p-1"
-      >
-        <Pencil size={14} />
-      </Button>
-      <Button
-        variant="ghost-danger"
-        onClick={() => s._id && setConfirmId(s._id)}
-        className="p-1"
-      >
-        <Trash2 size={14} />
-      </Button>
-    </div>
-  );
-
-  const ReorderColumn = ({
-    items,
-    category,
-  }: {
-    items: Section[];
-    category: "food" | "drinks";
-  }) =>
-    items.length === 0 ? (
-      <p className="py-3 text-sm text-muted-foreground">{a.empty}</p>
-    ) : (
-      <Reorder.Group
-        axis="y"
-        values={items}
-        onReorder={(newOrder) => handleReorder(category, newOrder)}
-        className="space-y-0"
-      >
-        {items.map((s) => (
-          <Reorder.Item key={s._id} value={s} className="list-none">
-            <SectionRow s={s} />
-          </Reorder.Item>
-        ))}
-      </Reorder.Group>
-    );
-
   return (
     <div className="space-y-6 max-w-3xl">
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -293,13 +331,13 @@ export default function SectionManager() {
               <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50 mb-2">
                 {a.categoryFood}
               </p>
-              <ReorderColumn items={foodOrder} category="food" />
+              <ReorderColumn items={foodOrder} category="food" emptyText={a.empty} lang={lang} onReorder={handleReorder} onEdit={openEdit} onDelete={setConfirmId} onGripPointerDown={startAutoScroll} />
             </div>
             <div>
               <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50 mb-2">
                 {a.categoryDrinks}
               </p>
-              <ReorderColumn items={drinksOrder} category="drinks" />
+              <ReorderColumn items={drinksOrder} category="drinks" emptyText={a.empty} lang={lang} onReorder={handleReorder} onEdit={openEdit} onDelete={setConfirmId} onGripPointerDown={startAutoScroll} />
             </div>
           </div>
 
@@ -323,6 +361,12 @@ export default function SectionManager() {
             <ReorderColumn
               items={mobileTab === "food" ? foodOrder : drinksOrder}
               category={mobileTab}
+              emptyText={a.empty}
+              lang={lang}
+              onReorder={handleReorder}
+              onEdit={openEdit}
+              onDelete={setConfirmId}
+              onGripPointerDown={startAutoScroll}
             />
           </div>
         </>
@@ -410,12 +454,7 @@ export default function SectionManager() {
                 {a.extrasSaveFirst}
               </p>
             ) : loadingExtras ? (
-              <div className="flex justify-center py-4">
-                <Loader2
-                  size={18}
-                  className="animate-spin text-muted-foreground"
-                />
-              </div>
+              <Loader size={32} className="py-2" />
             ) : extras.length === 0 ? (
               <p className="text-sm text-muted-foreground">{a.extrasEmpty}</p>
             ) : (

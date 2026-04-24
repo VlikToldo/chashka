@@ -58,7 +58,7 @@ function PhotoModal({
   );
 }
 
-const MenuItemRow = memo(function MenuItemRow({ item }: { item: MenuItem }) {
+const MenuItemRow = memo(function MenuItemRow({ item, index = 0 }: { item: MenuItem; index?: number }) {
   const { lang, t } = useLanguage();
   const name = localize(item.name, lang);
   const ingredients = localize(item.ingredients, lang);
@@ -71,8 +71,10 @@ const MenuItemRow = memo(function MenuItemRow({ item }: { item: MenuItem }) {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) }}
         className="group border-b border-border/50 last:border-b-0"
       >
         <div
@@ -215,7 +217,7 @@ export default function MenuSection({ title, items, extras = [] }: Props) {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 border border-border/40 bg-muted/20">
               {extras.map((item) => (
-                <ExtraItem key={item._id ?? String(item.name)} item={item} />
+                <ExtraItem key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en} item={item} />
               ))}
             </div>
           </div>
@@ -227,8 +229,8 @@ export default function MenuSection({ title, items, extras = [] }: Props) {
           </p>
         ) : (
           <div className="max-w-3xl mx-auto space-y-0">
-            {items.map((item) => (
-              <MenuItemRow key={item._id ?? String(item.name)} item={item} />
+            {items.map((item, i) => (
+              <MenuItemRow key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en} item={item} index={i} />
             ))}
           </div>
         )}

@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 **/node_modules/
+.github/
 
 # Build output
 frontend/dist/
@@ -23,6 +24,7 @@ yarn.lock
 # Markdown docs (internal)
 *.md
 **/*.md
+!.github/**/*.md
 
 # Logs
 logs/

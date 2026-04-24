@@ -6,9 +6,18 @@ import { useLanguage } from "../context/LanguageContext";
 import { useVenue } from "../context/VenueContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { coverPhotoService } from "../services/menuService";
+import {
+  parsePosition,
+  getWrapperStyle,
+  imgStyle,
+  DEFAULT_POSITION,
+  type PhotoPosition,
+} from "../utils/photoPosition";
+import { getOptimizedUrl } from "../utils/imageUrl";
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
+  const [logoPos, setLogoPos] = useState<PhotoPosition>(DEFAULT_POSITION);
   const [logoLoading, setLogoLoading] = useState(true);
   const { t, lang } = useLanguage();
   const { venue } = useVenue();
@@ -18,7 +27,10 @@ export default function Header() {
   useEffect(() => {
     coverPhotoService
       .getPhoto()
-      .then((url) => setLogoSrc(url))
+      .then(({ image, objectPosition }) => {
+        setLogoSrc(image);
+        setLogoPos(parsePosition(objectPosition));
+      })
       .catch(() => setLogoSrc(null))
       .finally(() => setLogoLoading(false));
   }, []);
@@ -90,17 +102,19 @@ export default function Header() {
 
         {/* Logo */}
         <Link to="/" className="flex flex-col items-center mx-auto md:mx-0">
-          <div className="w-20 h-20 md:w-32 md:h-32 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+          <div className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center relative">
             {logoLoading ? (
-              <div className="w-6 h-6 rounded-full border-2 border-border border-t-foreground animate-spin" />
+              <div className="w-8 h-8 rounded-full border-2 border-border border-t-foreground animate-spin" />
             ) : logoSrc ? (
-              <img
-                src={logoSrc}
-                alt="CHASHKA Coffee Shop Logo"
-                className="w-full h-full object-cover"
-              />
+              <div style={getWrapperStyle(logoPos)}>
+                <img
+                  src={getOptimizedUrl(logoSrc)}
+                  alt="CHASHKA Coffee Shop Logo"
+                  style={imgStyle}
+                />
+              </div>
             ) : (
-              <span className="font-serif text-xs md:text-sm tracking-[0.2em] text-foreground/70 text-center leading-tight px-2">
+              <span className="font-serif text-base md:text-lg tracking-[0.2em] text-foreground/70 text-center leading-tight px-2">
                 CHASHKA
               </span>
             )}

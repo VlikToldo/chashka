@@ -5,14 +5,19 @@ import {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  reorderMenuItems,
   uploadMenuItemImage as uploadImage,
 } from "../../controllers/admin/menuItemsController.js";
 import { validate } from "../../middleware/validate.js";
-import { createMenuItemSchema, updateMenuItemSchema } from "../../schemas/index.js";
+import {
+  createMenuItemSchema,
+  updateMenuItemSchema,
+} from "../../schemas/index.js";
 
 const router = Router();
 router.get("/", getMenuItems);
 router.post("/", validate(createMenuItemSchema), createMenuItem);
+router.patch("/reorder", reorderMenuItems);
 router.put("/:id", validate(updateMenuItemSchema), updateMenuItem);
 router.delete("/:id", deleteMenuItem);
 router.post("/:id/image", uploadMenuItemImage.single("image"), uploadImage);

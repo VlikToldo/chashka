@@ -45,6 +45,12 @@
   body {
     @apply bg-background text-foreground font-serif antialiased;
   }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  a[href] {
+    cursor: pointer;
+  }
 }
 
 @media (min-width: 1280px) {

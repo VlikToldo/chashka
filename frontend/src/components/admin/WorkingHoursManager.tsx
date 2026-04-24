@@ -3,15 +3,28 @@ import { Plus, Trash2, Save, Check } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useVenue } from "../../context/VenueContext";
+import { useToast } from "../../context/ToastContext";
 import Loader from "../ui/Loader";
+import Button from "../ui/Button";
+import SectionTitle from "../ui/SectionTitle";
 import ConfirmModal from "../ui/ConfirmModal";
 import PlacesAutocompleteInput from "./PlacesAutocompleteInput";
-import { type TimeSlot, type DayKey, ALL_DAYS, type VenueInfo } from "../../types/admin";
+import {
+  type TimeSlot,
+  type DayKey,
+  ALL_DAYS,
+  type VenueInfo,
+} from "../../types/admin";
 
 const genId = () => crypto.randomUUID();
 
 const DEFAULT_SLOTS: TimeSlot[] = [
-  { id: genId(), days: ["mon", "tue", "wed", "thu", "fri"], openTime: "08:00", closeTime: "18:00" },
+  {
+    id: genId(),
+    days: ["mon", "tue", "wed", "thu", "fri"],
+    openTime: "08:00",
+    closeTime: "18:00",
+  },
   { id: genId(), days: ["sat", "sun"], openTime: "09:00", closeTime: "19:00" },
 ];
 
@@ -19,15 +32,8 @@ const inputClass =
   "w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors";
 const labelClass = "text-xs tracking-wide uppercase text-muted-foreground";
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-sm font-medium tracking-wide uppercase border-b border-border pb-2 mb-4">
-      {children}
-    </h3>
-  );
-}
-
 export default function WorkingHoursManager() {
+  const { showToast } = useToast();
   const { t } = useLanguage();
   const a = t.admin.hours;
   const c = t.admin.common;
@@ -35,7 +41,10 @@ export default function WorkingHoursManager() {
   const { refresh: refreshVenue } = useVenue();
 
   // Venue state
-  const [venue, setVenue] = useState<VenueInfo>({ address: { uk: "", en: "", es: "" }, phone: "" });
+  const [venue, setVenue] = useState<VenueInfo>({
+    address: { uk: "", en: "", es: "" },
+    phone: "",
+  });
   const [addressInput, setAddressInput] = useState("");
   const [savingVenue, setSavingVenue] = useState(false);
   const [savedVenue, setSavedVenue] = useState(false);
@@ -50,18 +59,24 @@ export default function WorkingHoursManager() {
   const [confirmSlotId, setConfirmSlotId] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.allSettled([adminService.getVenue(), adminService.getWorkingHours()])
+    Promise.allSettled([
+      adminService.getVenue(),
+      adminService.getWorkingHours(),
+    ])
       .then(([venResult, hoursResult]) => {
         if (venResult.status === "fulfilled") {
           setVenue(venResult.value);
           setAddressInput(
             venResult.value.address.en ||
-            venResult.value.address.uk ||
-            venResult.value.address.es ||
-            ""
+              venResult.value.address.uk ||
+              venResult.value.address.es ||
+              "",
           );
         }
-        if (hoursResult.status === "fulfilled" && hoursResult.value.slots.length > 0) {
+        if (
+          hoursResult.status === "fulfilled" &&
+          hoursResult.value.slots.length > 0
+        ) {
           setSlots(hoursResult.value.slots);
         }
       })
@@ -70,6 +85,10 @@ export default function WorkingHoursManager() {
 
   const handleSaveVenue = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!addressInput.trim()) {
+      setVenueError(c.errorSave);
+      return;
+    }
     setSavingVenue(true);
     setVenueError(null);
     try {
@@ -81,6 +100,7 @@ export default function WorkingHoursManager() {
       refreshVenue();
       setSavedVenue(true);
       setTimeout(() => setSavedVenue(false), 2500);
+      showToast(c.saved, "success");
     } catch {
       setVenueError(c.errorSave);
     } finally {
@@ -89,7 +109,10 @@ export default function WorkingHoursManager() {
   };
 
   const addSlot = () =>
-    setSlots((prev) => [...prev, { id: genId(), days: [], openTime: "09:00", closeTime: "18:00" }]);
+    setSlots((prev) => [
+      ...prev,
+      { id: genId(), days: [], openTime: "09:00", closeTime: "18:00" },
+    ]);
 
   const removeSlot = (id: string) =>
     setSlots((prev) => prev.filter((s) => s.id !== id));
@@ -101,7 +124,9 @@ export default function WorkingHoursManager() {
     setSlots((prev) =>
       prev.map((s) => {
         if (s.id !== slotId) return s;
-        const days = s.days.includes(day) ? s.days.filter((d) => d !== day) : [...s.days, day];
+        const days = s.days.includes(day)
+          ? s.days.filter((d) => d !== day)
+          : [...s.days, day];
         return { ...s, days };
       }),
     );
@@ -150,14 +175,10 @@ export default function WorkingHoursManager() {
 
         {venueError && <p className="text-sm text-red-500">{venueError}</p>}
 
-        <button
-          type="submit"
-          disabled={savingVenue}
-          className="flex items-center gap-1.5 px-5 py-2 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
-        >
+        <Button type="submit" disabled={savingVenue} className="px-5 py-2">
           {savedVenue ? <Check size={14} /> : <Save size={14} />}
           {savingVenue ? c.saving : savedVenue ? c.saved : a.saveVenueBtn}
-        </button>
+        </Button>
       </form>
 
       {/* Working hours section */}
@@ -168,21 +189,26 @@ export default function WorkingHoursManager() {
 
         <div className="space-y-4">
           {slots.map((slot, idx) => (
-            <div key={slot.id} className="border border-border/50 p-4 space-y-4">
+            <div
+              key={slot.id}
+              className="border border-border/50 p-4 space-y-4"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs tracking-wide uppercase text-muted-foreground">
                   {a.slot} {idx + 1}
                 </span>
-                <button
+                <Button
+                  variant="ghost-danger"
                   onClick={() => setConfirmSlotId(slot.id)}
-                  className="text-muted-foreground hover:text-red-500 transition-colors"
                 >
                   <Trash2 size={14} />
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">{a.days}</label>
+                <label className="text-xs text-muted-foreground">
+                  {a.days}
+                </label>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_DAYS.map((day) => (
                     <button
@@ -203,21 +229,29 @@ export default function WorkingHoursManager() {
 
               <div className="flex items-center gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">{a.open}</label>
+                  <label className="text-xs text-muted-foreground">
+                    {a.open}
+                  </label>
                   <input
                     type="time"
                     value={slot.openTime}
-                    onChange={(e) => updateSlot(slot.id, { openTime: e.target.value })}
+                    onChange={(e) =>
+                      updateSlot(slot.id, { openTime: e.target.value })
+                    }
                     className="bg-transparent border-b border-border py-1 text-sm outline-none focus:border-foreground transition-colors"
                   />
                 </div>
                 <span className="text-muted-foreground text-sm mt-4">–</span>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">{a.close}</label>
+                  <label className="text-xs text-muted-foreground">
+                    {a.close}
+                  </label>
                   <input
                     type="time"
                     value={slot.closeTime}
-                    onChange={(e) => updateSlot(slot.id, { closeTime: e.target.value })}
+                    onChange={(e) =>
+                      updateSlot(slot.id, { closeTime: e.target.value })
+                    }
                     className="bg-transparent border-b border-border py-1 text-sm outline-none focus:border-foreground transition-colors"
                   />
                 </div>
@@ -234,14 +268,14 @@ export default function WorkingHoursManager() {
           {a.addSlot}
         </button>
 
-        <button
+        <Button
           onClick={handleSaveHours}
           disabled={saving}
-          className="flex items-center gap-1.5 px-6 py-2.5 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
+          className="px-6 py-2.5"
         >
           <Save size={14} />
           {saving ? c.saving : saved ? c.saved : a.saveBtn}
-        </button>
+        </Button>
       </div>
 
       <ConfirmModal
@@ -249,7 +283,12 @@ export default function WorkingHoursManager() {
         message={c.confirmDelete}
         confirmLabel={c.delete ?? "Видалити"}
         cancelLabel={c.cancel}
-        onConfirm={() => { if (confirmSlotId) { removeSlot(confirmSlotId); setConfirmSlotId(null); } }}
+        onConfirm={() => {
+          if (confirmSlotId) {
+            removeSlot(confirmSlotId);
+            setConfirmSlotId(null);
+          }
+        }}
         onCancel={() => setConfirmSlotId(null)}
       />
     </div>

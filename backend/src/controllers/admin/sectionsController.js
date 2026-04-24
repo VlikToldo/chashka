@@ -7,19 +7,21 @@ export async function getSections(_req, res) {
 }
 
 export async function createSection(req, res) {
-  const { name, order } = req.body;
+  const { name, category, order } = req.body;
   if (!name) return res.status(400).json({ error: "Name required" });
   const section = await Section.create({
     name: await translateToAllLanguages(name),
+    category: category ?? "food",
     order,
   });
   res.status(201).json(section);
 }
 
 export async function updateSection(req, res) {
-  const { name, order } = req.body;
+  const { name, category, order } = req.body;
   const update = {};
   if (name !== undefined) update.name = await translateToAllLanguages(name);
+  if (category !== undefined) update.category = category;
   if (order !== undefined) update.order = order;
   const section = await Section.findByIdAndUpdate(req.params.id, update, {
     new: true,
@@ -31,5 +33,15 @@ export async function updateSection(req, res) {
 export async function deleteSection(req, res) {
   const section = await Section.findByIdAndDelete(req.params.id);
   if (!section) return res.status(404).json({ error: "Not found" });
+  res.json({ success: true });
+}
+
+export async function reorderSections(req, res) {
+  const updates = req.body;
+  if (!Array.isArray(updates))
+    return res.status(400).json({ error: "Array expected" });
+  await Promise.all(
+    updates.map(({ id, order }) => Section.findByIdAndUpdate(id, { order })),
+  );
   res.json({ success: true });
 }

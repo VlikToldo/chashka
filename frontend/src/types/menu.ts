@@ -7,6 +7,7 @@ export interface LocalizedString {
 export interface PublicSection {
   _id: string;
   name: LocalizedString;
+  category: "food" | "drinks";
   order?: number;
 }
 
@@ -19,4 +20,5 @@ export interface MenuItem {
   allergens?: LocalizedString;
   yield?: LocalizedString;
   image?: string;
+  isExtra?: boolean;
 }

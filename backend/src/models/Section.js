@@ -8,6 +8,7 @@ const multilingualString = (required = false) => ({
 
 const sectionSchema = new mongoose.Schema({
   name: multilingualString(true),
+  category: { type: String, enum: ["food", "drinks"], default: "food" },
   order: { type: Number, default: 0 },
 });
 

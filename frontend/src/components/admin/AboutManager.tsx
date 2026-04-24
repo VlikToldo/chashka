@@ -13,9 +13,12 @@ import { useLanguage } from "../../context/LanguageContext";
 import { localize } from "../../utils/localize";
 import LocalizedInput from "./LocalizedInput";
 import Loader from "../ui/Loader";
+import Button from "../ui/Button";
+import AdminModal from "../ui/AdminModal";
 import ConfirmModal from "../ui/ConfirmModal";
 import type { AboutBlock } from "../../types/about";
 import type { LocalizedString } from "../../types/menu";
+import { getOptimizedUrl } from "../../utils/imageUrl";
 
 const EMPTY_L: LocalizedString = { uk: "", en: "", es: "" };
 const EMPTY_FORM: Omit<AboutBlock, "_id"> = {
@@ -136,108 +139,80 @@ export default function AboutManager() {
     }
   };
 
-  if (loading)
-    return <Loader />;
+  if (loading) return <Loader />;
 
   return (
     <div className="space-y-6">
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {!showForm ? (
-        <>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-1.5 px-4 py-2 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity"
-          >
-            <Plus size={14} />
-            {a.addBtn}
-          </button>
+      <Button onClick={openCreate} className="px-4 py-2">
+        <Plus size={14} />
+        {a.addBtn}
+      </Button>
 
-          {blocks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{a.empty}</p>
-          ) : (
-            <ul className="divide-y divide-border/50">
-              {blocks.map((block, i) => (
-                <li key={block._id} className="py-4 flex items-start gap-4">
-                  {block.image ? (
-                    <img
-                      src={block.image}
-                      alt={localize(block.title, lang)}
-                      loading="lazy"
-                      className="w-14 h-14 object-cover rounded flex-shrink-0 mt-0.5"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                      <ImageIcon size={16} className="text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">
-                      {localize(block.title, lang)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 font-light">
-                      {localize(block.text, lang)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1 flex-shrink-0">
-                    <button onClick={() => moveBlock(i, -1)} disabled={i === 0} className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"><ChevronUp size={13} /></button>
-                    <button onClick={() => moveBlock(i, 1)} disabled={i === blocks.length - 1} className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"><ChevronDown size={13} /></button>
-                  </div>
-                  <button onClick={() => openEdit(block)} className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"><Pencil size={14} /></button>
-                  <button onClick={() => block._id && setConfirmId(block._id)} className="p-1 text-muted-foreground hover:text-red-500 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+      {blocks.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{a.empty}</p>
       ) : (
-        <form onSubmit={handleSave} className="space-y-5 max-w-2xl">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium tracking-wide uppercase">
-              {editingId ? a.editHeading : a.newHeading}
-            </h3>
-            <button type="button" onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-              <X size={18} />
-            </button>
-          </div>
-
-          <LocalizedInput label={a.fields.blockTitle} value={form.title} onChange={(v) => setForm((f) => ({ ...f, title: v }))} placeholder={a.fields.blockTitle} required />
-          <LocalizedInput label={a.fields.text} value={form.text} onChange={(v) => setForm((f) => ({ ...f, text: v }))} placeholder={a.fields.text} multiline required />
-
-          <div className="space-y-2">
-            <label className="text-xs tracking-wide uppercase text-muted-foreground">{a.fields.photo}</label>
-            <div className="flex items-center gap-4">
-              {imagePreview ? (
-                <div className="relative">
-                  <img src={imagePreview} alt="preview" className="w-24 h-24 object-cover rounded" />
-                  <button type="button" onClick={() => { setImagePreview(null); setPendingFile(null); setForm((f) => ({ ...f, image: "" })); }} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-foreground text-background rounded-full flex items-center justify-center">
-                    <X size={10} />
-                  </button>
-                </div>
+        <ul className="divide-y divide-border/50">
+          {blocks.map((block, i) => (
+            <li key={block._id} className="py-4 flex items-start gap-4">
+              {block.image ? (
+                <img
+                  src={getOptimizedUrl(block.image)}
+                  alt={localize(block.title, lang)}
+                  loading="lazy"
+                  className="w-14 h-14 object-cover rounded flex-shrink-0 mt-0.5"
+                />
               ) : (
-                <div onClick={() => fileRef.current?.click()} className="w-24 h-24 bg-muted rounded flex items-center justify-center cursor-pointer hover:bg-muted/70 transition-colors">
-                  <ImageIcon size={20} className="text-muted-foreground" />
+                <div className="w-14 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                  <ImageIcon size={16} className="text-muted-foreground" />
                 </div>
               )}
-              <button type="button" onClick={() => fileRef.current?.click()} className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors">
-                {c.choosePhoto}
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-            </div>
-          </div>
-
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
-          <div className="flex gap-3 pt-2">
-            <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40">
-              {saving ? c.saving : c.save}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 border border-border text-xs tracking-wide uppercase hover:bg-muted transition-colors">
-              {c.cancel}
-            </button>
-          </div>
-        </form>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">
+                  {localize(block.title, lang)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 font-light">
+                  {localize(block.text, lang)}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  disabled={i === 0}
+                  onClick={() => moveBlock(i, -1)}
+                  className="p-1"
+                >
+                  <ChevronUp size={13} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={i === blocks.length - 1}
+                  onClick={() => moveBlock(i, 1)}
+                  className="p-1"
+                >
+                  <ChevronDown size={13} />
+                </Button>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={() => openEdit(block)}
+                className="p-1 flex-shrink-0"
+              >
+                <Pencil size={14} />
+              </Button>
+              <Button
+                variant="ghost-danger"
+                onClick={() => block._id && setConfirmId(block._id)}
+                className="p-1 flex-shrink-0"
+              >
+                <Trash2 size={14} />
+              </Button>
+            </li>
+          ))}
+        </ul>
       )}
+
       <ConfirmModal
         isOpen={!!confirmId}
         message={c.confirmDelete}
@@ -246,6 +221,99 @@ export default function AboutManager() {
         onConfirm={() => confirmId && handleDelete(confirmId)}
         onCancel={() => setConfirmId(null)}
       />
+
+      {/* Modal */}
+      {showForm && (
+        <AdminModal
+          title={editingId ? a.editHeading : a.newHeading}
+          onClose={() => setShowForm(false)}
+        >
+          <form onSubmit={handleSave} className="px-6 py-5 space-y-5">
+            <LocalizedInput
+              label={a.fields.blockTitle}
+              value={form.title}
+              onChange={(v) => setForm((f) => ({ ...f, title: v }))}
+              placeholder={a.fields.blockTitle}
+              required
+            />
+            <LocalizedInput
+              label={a.fields.text}
+              value={form.text}
+              onChange={(v) => setForm((f) => ({ ...f, text: v }))}
+              placeholder={a.fields.text}
+              multiline
+              rows={6}
+              required
+            />
+
+            <div className="space-y-2">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                {a.fields.photo}
+              </label>
+              <div className="flex items-center gap-4">
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="preview"
+                      className="w-24 h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setPendingFile(null);
+                        setForm((f) => ({ ...f, image: "" }));
+                      }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-foreground text-background rounded-full flex items-center justify-center"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileRef.current?.click()}
+                    className="w-24 h-24 bg-muted rounded flex items-center justify-center cursor-pointer hover:bg-muted/70 transition-colors"
+                  >
+                    <ImageIcon size={20} className="text-muted-foreground" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
+                >
+                  {c.choosePhoto}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            {/* Footer */}
+            <div className="flex gap-3 pt-2 border-t border-border mt-5">
+              <Button type="submit" disabled={saving} className="flex-1 py-2.5">
+                {saving ? c.saving : c.save}
+              </Button>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-6 py-2.5"
+              >
+                {c.cancel}
+              </Button>
+            </div>
+          </form>
+        </AdminModal>
+      )}
     </div>
   );
 }

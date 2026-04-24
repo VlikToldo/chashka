@@ -3,23 +3,19 @@ import { Save, Check } from "lucide-react";
 import axios from "axios";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
+import { useToast } from "../../context/ToastContext";
 import Loader from "../ui/Loader";
+import Button from "../ui/Button";
+import SectionTitle from "../ui/SectionTitle";
 import type { AdminProfile } from "../../types/admin";
 
 const inputClass =
   "w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors";
 const labelClass = "text-xs tracking-wide uppercase text-muted-foreground";
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-sm font-medium tracking-wide uppercase border-b border-border pb-2 mb-4">
-      {children}
-    </h3>
-  );
-}
-
 export default function ProfileManager() {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const p = t.admin.profile;
   const c = t.admin.common;
 
@@ -56,17 +52,22 @@ export default function ProfileManager() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile.email.trim()) {
+      setProfileError(c.errorSave);
+      return;
+    }
     setSavingProfile(true);
     setProfileError(null);
     try {
       const updated = await adminService.updateProfile({
-        email: profile.email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
+        email: profile.email.trim(),
+        firstName: profile.firstName.trim(),
+        lastName: profile.lastName.trim(),
       });
       setProfile(updated);
       setSavedProfile(true);
       setTimeout(() => setSavedProfile(false), 2500);
+      showToast(c.saved, "success");
     } catch {
       setProfileError(c.errorSave);
     } finally {
@@ -76,6 +77,10 @@ export default function ProfileManager() {
 
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!pwForm.currentPassword.trim() || !pwForm.newPassword.trim() || !pwForm.confirmPassword.trim()) {
+      setPwError(c.errorSave);
+      return;
+    }
     if (pwForm.newPassword !== pwForm.confirmPassword) {
       setPwError(p.passwordMismatch);
       return;
@@ -90,6 +95,7 @@ export default function ProfileManager() {
       setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setSavedPw(true);
       setTimeout(() => setSavedPw(false), 2500);
+      showToast(c.saved, "success");
     } catch (err) {
       const msg =
         axios.isAxiosError(err) && err.response?.data?.error
@@ -150,14 +156,10 @@ export default function ProfileManager() {
 
         {profileError && <p className="text-sm text-red-500">{profileError}</p>}
 
-        <button
-          type="submit"
-          disabled={savingProfile}
-          className="flex items-center gap-1.5 px-5 py-2 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
-        >
+        <Button type="submit" disabled={savingProfile} className="px-5 py-2">
           {savedProfile ? <Check size={14} /> : <Save size={14} />}
           {savingProfile ? c.saving : savedProfile ? c.saved : c.save}
-        </button>
+        </Button>
       </form>
 
       {/* Password */}
@@ -205,14 +207,10 @@ export default function ProfileManager() {
 
         {pwError && <p className="text-sm text-red-500">{pwError}</p>}
 
-        <button
-          type="submit"
-          disabled={savingPw}
-          className="flex items-center gap-1.5 px-5 py-2 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
-        >
+        <Button type="submit" disabled={savingPw} className="px-5 py-2">
           {savedPw ? <Check size={14} /> : <Save size={14} />}
           {savingPw ? c.saving : savedPw ? c.saved : c.save}
-        </button>
+        </Button>
       </form>
 
     </div>

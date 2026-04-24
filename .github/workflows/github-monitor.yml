@@ -1,0 +1,157 @@
+name: GitHub Monitor
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  issues:
+    types: [opened, reopened, closed]
+  release:
+    types: [published]
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  notify-event:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build message
+        id: message
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REPOSITORY: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          REF_NAME: ${{ github.ref_name }}
+          SERVER_URL: ${{ github.server_url }}
+          RUN_ID: ${{ github.run_id }}
+          EVENT_PATH: ${{ github.event_path }}
+        run: |
+          node <<'NODE' > message.txt
+          const fs = require('fs');
+
+          const eventName = process.env.EVENT_NAME;
+          const repo = process.env.REPOSITORY;
+          const actor = process.env.ACTOR;
+          const ref = process.env.REF_NAME;
+          const runUrl = `${process.env.SERVER_URL}/${repo}/actions/runs/${process.env.RUN_ID}`;
+
+          const payload = JSON.parse(fs.readFileSync(process.env.EVENT_PATH, 'utf8'));
+          let line = `[${repo}] ${eventName} by ${actor}`;
+
+          if (eventName === 'push') {
+            const count = payload.commits ? payload.commits.length : 0;
+            line = `[${repo}] push to ${ref} by ${actor} (${count} commit(s))`;
+          }
+
+          if (eventName === 'pull_request') {
+            const pr = payload.pull_request;
+            line = `[${repo}] PR #${pr.number} ${pr.title} (${pr.state}) by ${actor} ${pr.html_url}`;
+          }
+
+          if (eventName === 'issues') {
+            const issue = payload.issue;
+            line = `[${repo}] issue #${issue.number} ${issue.title} (${issue.state}) by ${actor} ${issue.html_url}`;
+          }
+
+          if (eventName === 'release') {
+            const rel = payload.release;
+            line = `[${repo}] release published: ${rel.tag_name} by ${actor} ${rel.html_url}`;
+          }
+
+          line += ` | run: ${runUrl}`;
+          fs.writeFileSync('message.txt', line);
+          NODE
+
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL is not set; skipping Slack notification."
+            exit 0
+          fi
+          MSG=$(cat message.txt)
+          jq -n --arg text "$MSG" '{text: $text}' > payload.json
+          curl -sS -X POST -H 'Content-type: application/json' --data @payload.json "$SLACK_WEBHOOK_URL"
+
+  scheduled-digest:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build 30-minute digest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          node <<'NODE' > digest.txt
+          const https = require('https');
+
+          const [owner, repo] = process.env.REPOSITORY.split('/');
+          const token = process.env.GH_TOKEN;
+          const since = Date.now() - 30 * 60 * 1000;
+
+          function request(path) {
+            return new Promise((resolve, reject) => {
+              const req = https.request({
+                hostname: 'api.github.com',
+                path,
+                method: 'GET',
+                headers: {
+                  'User-Agent': 'github-monitor-workflow',
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/vnd.github+json'
+                }
+              }, (res) => {
+                let data = '';
+                res.on('data', (chunk) => data += chunk);
+                res.on('end', () => {
+                  if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(JSON.parse(data || '[]'));
+                  } else {
+                    reject(new Error(`GitHub API ${res.statusCode}: ${data}`));
+                  }
+                });
+              });
+              req.on('error', reject);
+              req.end();
+            });
+          }
+
+          async function main() {
+            const events = await request(`/repos/${owner}/${repo}/events?per_page=100`);
+            const recent = events.filter((e) => new Date(e.created_at).getTime() >= since);
+
+            const push = recent.filter((e) => e.type === 'PushEvent').length;
+            const pr = recent.filter((e) => e.type === 'PullRequestEvent').length;
+            const issues = recent.filter((e) => e.type === 'IssuesEvent').length;
+            const rel = recent.filter((e) => e.type === 'ReleaseEvent').length;
+
+            const line = `[${owner}/${repo}] 30m digest: pushes=${push}, pr_events=${pr}, issues=${issues}, releases=${rel}`;
+            process.stdout.write(line);
+          }
+
+          main().catch((err) => {
+            console.error(err.message);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Send digest to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL is not set; skipping Slack digest."
+            exit 0
+          fi
+          MSG=$(cat digest.txt)
+          jq -n --arg text "$MSG" '{text: $text}' > payload.json
+          curl -sS -X POST -H 'Content-type: application/json' --data @payload.json "$SLACK_WEBHOOK_URL"

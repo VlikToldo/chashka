@@ -2,6 +2,12 @@ import { useEffect } from "react";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
 
+const LOCALE_MAP: Record<string, string> = {
+  es: "es_ES",
+  en: "en_US",
+  uk: "uk_UA",
+};
+
 interface SeoMeta {
   title: string;
   description: string;
@@ -9,6 +15,7 @@ interface SeoMeta {
   ogDescription?: string;
   ogImage?: string;
   canonical?: string;
+  lang?: "es" | "en" | "uk";
 }
 
 function setMeta(name: string, content: string) {
@@ -48,10 +55,18 @@ export function useSeoMeta({
   ogDescription,
   ogImage,
   canonical,
+  lang,
 }: SeoMeta) {
   useEffect(() => {
     const prevTitle = document.title;
+    const prevLang = document.documentElement.lang;
+
     document.title = title;
+
+    if (lang) {
+      document.documentElement.lang = lang;
+      setOgMeta("og:locale", LOCALE_MAP[lang] ?? "es_ES");
+    }
 
     setMeta("description", description);
     setOgMeta("og:title", ogTitle ?? title);
@@ -67,6 +82,7 @@ export function useSeoMeta({
 
     return () => {
       document.title = prevTitle;
+      document.documentElement.lang = prevLang;
     };
-  }, [title, description, ogTitle, ogDescription, ogImage, canonical]);
+  }, [title, description, ogTitle, ogDescription, ogImage, canonical, lang]);
 }

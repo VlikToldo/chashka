@@ -225,7 +225,7 @@ export const adminService = {
     return data;
   },
 
-  updateVenue: async (venue: Partial<VenueInfo>): Promise<VenueInfo> => {
+  updateVenue: async (venue: { address?: string; phone?: string }): Promise<VenueInfo> => {
     const { data } = await api.put("/venue", venue);
     return data;
   },

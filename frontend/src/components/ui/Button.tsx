@@ -26,7 +26,7 @@ const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   return (
     <button
       ref={ref}
-      className={`inline-flex items-center gap-1.5 ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}

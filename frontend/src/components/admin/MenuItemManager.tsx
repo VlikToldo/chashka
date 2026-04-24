@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Reorder } from "framer-motion";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { Plus, Pencil, Trash2, ImageIcon, GripVertical } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
@@ -31,6 +32,7 @@ const EMPTY_FORM: Omit<AdminMenuItem, "_id"> = {
 export default function MenuItemManager() {
   const { lang, t } = useLanguage();
   const { showToast } = useToast();
+  const { startAutoScroll } = useAutoScroll();
   const a = t.admin.menu;
   const c = t.admin.common;
 
@@ -108,13 +110,14 @@ export default function MenuItemManager() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm({ ...EMPTY_FORM, sectionId: sections[0]?._id ?? "" });
+    const keepSectionId = form.sectionId || (sections[0]?._id ?? "");
+    setForm({ ...EMPTY_FORM, sectionId: keepSectionId });
     setImagePreview(null);
     setPendingFile(null);
     setPriceAmount("");
     setPriceCurrency("\u20ac");
     setYieldAmount("");
-    setYieldUnit("ml");
+    // yieldUnit intentionally not reset — preserves last-used unit
     setShowForm(true);
   };
 
@@ -259,101 +262,109 @@ export default function MenuItemManager() {
   const matchesSearch = (item: AdminMenuItem) =>
     !q || allNames(item).includes(q);
 
+  const foodSections = sections.filter((s) => s.category !== "drinks");
+  const drinksSections = sections.filter((s) => s.category === "drinks");
+
+  const renderSectionColumn = (cols: Section[]) => (
+    <div className="space-y-8">
+      {cols.map((section) => {
+        const sectionItems = (itemsBySection[section._id!] ?? []).filter(matchesSearch);
+        if (sectionItems.length === 0 && q) return null;
+        return (
+          <div key={section._id}>
+            <p className="text-sm font-medium tracking-wide uppercase text-foreground mb-3 border-b border-border/50 pb-2">
+              {localize(section.name, lang)}
+            </p>
+            {sectionItems.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">{a.empty}</p>
+            ) : (
+              <Reorder.Group
+                axis="y"
+                values={sectionItems}
+                onReorder={(newOrder) => handleReorderSection(section._id!, newOrder)}
+                className="divide-y divide-border/50"
+              >
+                {sectionItems.map((item) => (
+                  <Reorder.Item key={item._id} value={item} className="list-none">
+                    <div className="flex items-center gap-3 py-3">
+                      <GripVertical
+                        size={14}
+                        className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
+                        onPointerDown={startAutoScroll}
+                      />
+                      {item.image ? (
+                        <img
+                          src={getOptimizedUrl(item.image)}
+                          alt={localize(item.name, lang)}
+                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          <ImageIcon size={14} className="text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm truncate">{localize(item.name, lang)}</p>
+                        <p className="text-xs text-muted-foreground">{item.price}</p>
+                      </div>
+                      <Button variant="ghost" onClick={() => openEdit(item)} className="p-1">
+                        <Pencil size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost-danger"
+                        onClick={() => item._id && setConfirmId(item._id)}
+                        className="p-1"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </Reorder.Item>
+                ))}
+              </Reorder.Group>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       {!showForm ? (
         <>
-          <Button onClick={openCreate} className="px-4 py-2">
-            <Plus size={14} />
-            {a.addBtn}
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button onClick={openCreate} className="px-4 py-2 shrink-0">
+              <Plus size={14} />
+              {a.addBtn}
+            </Button>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={a.searchPlaceholder}
+              className="flex-1 max-w-sm bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50"
+            />
+          </div>
 
-          {/* Search */}
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={a.searchPlaceholder}
-            className="w-full max-w-sm bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50"
-          />
-
-          {items.filter((i) => !i.isExtra).length === 0 ? (
+          {items.filter((i) => !i.isExtra).length === 0 && !q ? (
             <p className="text-sm text-muted-foreground">{a.empty}</p>
           ) : (
-            <div className="space-y-8">
-              {sections.map((section) => {
-                const sectionItems = (
-                  itemsBySection[section._id!] ?? []
-                ).filter(matchesSearch);
-                if (sectionItems.length === 0) return null;
-                return (
-                  <div key={section._id}>
-                    <p className="text-sm font-medium tracking-wide uppercase text-foreground mb-3 border-b border-border/50 pb-2">
-                      {localize(section.name, lang)}
-                    </p>
-                    <Reorder.Group
-                      axis="y"
-                      values={sectionItems}
-                      onReorder={(newOrder) =>
-                        handleReorderSection(section._id!, newOrder)
-                      }
-                      className="divide-y divide-border/50"
-                    >
-                      {sectionItems.map((item) => (
-                        <Reorder.Item
-                          key={item._id}
-                          value={item}
-                          className="list-none"
-                        >
-                          <div className="flex items-center gap-3 py-3">
-                            <GripVertical
-                              size={14}
-                              className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
-                            />
-                            {item.image ? (
-                              <img
-                                src={getOptimizedUrl(item.image)}
-                                alt={localize(item.name, lang)}
-                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                <ImageIcon
-                                  size={14}
-                                  className="text-muted-foreground"
-                                />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm truncate">
-                                {localize(item.name, lang)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.price}
-                              </p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              onClick={() => openEdit(item)}
-                              className="p-1"
-                            >
-                              <Pencil size={14} />
-                            </Button>
-                            <Button
-                              variant="ghost-danger"
-                              onClick={() => item._id && setConfirmId(item._id)}
-                              className="p-1"
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </Reorder.Item>
-                      ))}
-                    </Reorder.Group>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-0">
+              {/* Food column */}
+              <div>
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50 mb-4">
+                  {t.admin.sections.categoryFood}
+                </p>
+                {renderSectionColumn(foodSections)}
+              </div>
+              {/* Drinks column */}
+              <div>
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50 mb-4">
+                  {t.admin.sections.categoryDrinks}
+                </p>
+                {renderSectionColumn(drinksSections)}
+              </div>
             </div>
           )}
         </>
@@ -413,6 +424,7 @@ export default function MenuItemManager() {
                   className="flex-1 bg-transparent py-2 text-sm outline-none"
                   placeholder="3.50"
                   inputMode="decimal"
+                  required
                 />
                 <CustomSelect
                   value={priceCurrency}
@@ -491,38 +503,40 @@ export default function MenuItemManager() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                {a.fields.photo}
-              </label>
-              <div className="flex items-center gap-4">
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="preview"
-                    className="w-16 h-16 rounded-full object-cover"
+            {!form.isExtra && (
+              <div className="space-y-2">
+                <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                  {a.fields.photo}
+                </label>
+                <div className="flex items-center gap-4">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="preview"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                      <ImageIcon size={20} className="text-muted-foreground" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
+                  >
+                    {c.choosePhoto}
+                  </button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
                   />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                    <ImageIcon size={20} className="text-muted-foreground" />
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
-                >
-                  {c.choosePhoto}
-                </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+                </div>
               </div>
-            </div>
+            )}
 
             {error && <p className="text-sm text-red-500">{error}</p>}
 

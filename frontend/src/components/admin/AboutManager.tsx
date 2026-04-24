@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
+import { useToast } from "../../context/ToastContext";
 import { localize } from "../../utils/localize";
 import LocalizedInput from "./LocalizedInput";
 import Loader from "../ui/Loader";
@@ -29,6 +30,7 @@ const EMPTY_FORM: Omit<AboutBlock, "_id"> = {
 
 export default function AboutManager() {
   const { lang, t } = useLanguage();
+  const { showToast } = useToast();
   const a = t.admin.about;
   const c = t.admin.common;
   const [blocks, setBlocks] = useState<AboutBlock[]>([]);
@@ -76,6 +78,12 @@ export default function AboutManager() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const titleFilled = Object.values(form.title).some((v) => v.trim() !== "");
+    const textFilled = Object.values(form.text).some((v) => v.trim() !== "");
+    if (!titleFilled || !textFilled) {
+      setError(c.errorSave);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -102,6 +110,7 @@ export default function AboutManager() {
         }
         setBlocks((prev) => [...prev, created]);
       }
+      showToast(c.saved, "success");
       setShowForm(false);
     } catch {
       setError(c.errorSave);

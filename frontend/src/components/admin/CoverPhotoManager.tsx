@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ImageIcon, Upload, Save, X, ZoomIn, ZoomOut } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
+import { useToast } from "../../context/ToastContext";
 import Loader from "../ui/Loader";
 import Button from "../ui/Button";
 import {
@@ -19,6 +20,7 @@ const CIRCLE_SIZE = 288;
 
 export default function CoverPhotoManager() {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const a = t.admin.cover;
   const c = t.admin.common;
 
@@ -198,6 +200,7 @@ export default function CoverPhotoManager() {
       setPendingFile(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+      showToast(c.saved, "success");
     } catch {
       setError(c.errorSave);
     } finally {
@@ -255,7 +258,7 @@ export default function CoverPhotoManager() {
 
       {pendingFile && preview && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="relative w-full max-w-xs bg-background border border-border my-8">
+          <div className="relative w-full max-w-xs bg-background border border-border rounded-xl my-8">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <h2 className="text-sm font-medium tracking-wide">
                 Позиція фото

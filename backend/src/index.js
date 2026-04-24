@@ -11,6 +11,7 @@ import menuPublicRouter from "./routes/public/menu.js";
 import aboutPublicRouter from "./routes/public/about.js";
 import coverPhotoPublicRouter from "./routes/public/coverPhoto.js";
 import venuePublicRouter from "./routes/public/venue.js";
+import workingHoursPublicRouter from "./routes/public/workingHours.js";
 
 import authAdminRouter from "./routes/admin/auth.js";
 import profileAdminRouter from "./routes/admin/profile.js";
@@ -56,6 +57,7 @@ app.use("/api/menu", menuPublicRouter);
 app.use("/api/about", aboutPublicRouter);
 app.use("/api/cover-photo", coverPhotoPublicRouter);
 app.use("/api/venue", venuePublicRouter);
+app.use("/api/working-hours", workingHoursPublicRouter);
 
 // Admin auth (no middleware)
 app.use("/api/admin", authAdminRouter);

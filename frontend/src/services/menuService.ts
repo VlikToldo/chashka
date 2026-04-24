@@ -17,7 +17,21 @@ export const menuService = {
 
   getBySection: async (sectionId: string): Promise<MenuItem[]> => {
     const { data } = await api.get<MenuItem[]>("/menu", {
-      params: { sectionId },
+      params: { sectionId, isExtra: false },
+    });
+    return data;
+  },
+
+  getExtras: async (sectionId: string): Promise<MenuItem[]> => {
+    const { data } = await api.get<MenuItem[]>("/menu", {
+      params: { sectionId, isExtra: true },
+    });
+    return data;
+  },
+
+  getAllExtras: async (): Promise<MenuItem[]> => {
+    const { data } = await api.get<MenuItem[]>("/menu", {
+      params: { isExtra: true },
     });
     return data;
   },
@@ -31,9 +45,17 @@ export const aboutService = {
 };
 
 export const coverPhotoService = {
-  getPhoto: async (): Promise<string | null> => {
-    const { data } = await api.get<{ image: string }>("/cover-photo");
-    return data.image ?? null;
+  getPhoto: async (): Promise<{
+    image: string | null;
+    objectPosition: string;
+  }> => {
+    const { data } = await api.get<{ image: string; objectPosition?: string }>(
+      "/cover-photo",
+    );
+    return {
+      image: data.image ?? null,
+      objectPosition: data.objectPosition ?? "{}",
+    };
   },
 };
 

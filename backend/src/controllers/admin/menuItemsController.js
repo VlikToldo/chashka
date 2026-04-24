@@ -1,8 +1,12 @@
 import MenuItem from "../../models/MenuItem.js";
 import { translateToAllLanguages } from "../../services/translationService.js";
 
-export async function getMenuItems(_req, res) {
-  const items = await MenuItem.find().sort({ order: 1 });
+export async function getMenuItems(req, res) {
+  const { sectionId, isExtra } = req.query;
+  const filter = {};
+  if (sectionId) filter.sectionId = sectionId;
+  if (isExtra !== undefined) filter.isExtra = isExtra === "true";
+  const items = await MenuItem.find(filter).sort({ order: 1 });
   res.json(items);
 }
 
@@ -14,6 +18,7 @@ export async function createMenuItem(req, res) {
     ingredients,
     allergens,
     yield: yld,
+    isExtra,
     order,
   } = req.body;
   if (!sectionId || !name || !price)
@@ -21,13 +26,17 @@ export async function createMenuItem(req, res) {
       .status(400)
       .json({ error: "sectionId, name and price required" });
 
-  const [translatedName, translatedIngredients, translatedAllergens, translatedYield] =
-    await Promise.all([
-      translateToAllLanguages(name),
-      translateToAllLanguages(ingredients),
-      translateToAllLanguages(allergens),
-      translateToAllLanguages(yld),
-    ]);
+  const [
+    translatedName,
+    translatedIngredients,
+    translatedAllergens,
+    translatedYield,
+  ] = await Promise.all([
+    translateToAllLanguages(name),
+    translateToAllLanguages(ingredients),
+    translateToAllLanguages(allergens),
+    translateToAllLanguages(yld),
+  ]);
 
   const item = await MenuItem.create({
     sectionId,
@@ -36,17 +45,28 @@ export async function createMenuItem(req, res) {
     ingredients: translatedIngredients,
     allergens: translatedAllergens,
     yield: translatedYield,
+    isExtra: !!isExtra,
     order,
   });
   res.status(201).json(item);
 }
 
 export async function updateMenuItem(req, res) {
-  const { name, price, ingredients, allergens, yield: yld, sectionId, order } = req.body;
+  const {
+    name,
+    price,
+    ingredients,
+    allergens,
+    yield: yld,
+    sectionId,
+    isExtra,
+    order,
+  } = req.body;
   const update = {};
 
   if (sectionId !== undefined) update.sectionId = sectionId;
   if (price !== undefined) update.price = price;
+  if (isExtra !== undefined) update.isExtra = !!isExtra;
   if (order !== undefined) update.order = order;
 
   const translationFields = [
@@ -74,6 +94,13 @@ export async function updateMenuItem(req, res) {
 export async function deleteMenuItem(req, res) {
   const item = await MenuItem.findByIdAndDelete(req.params.id);
   if (!item) return res.status(404).json({ error: "Not found" });
+  res.json({ success: true });
+}
+
+export async function reorderMenuItems(req, res) {
+  const updates = req.body;
+  if (!Array.isArray(updates)) return res.status(400).json({ error: "Array expected" });
+  await Promise.all(updates.map(({ id, order }) => MenuItem.findByIdAndUpdate(id, { order })));
   res.json({ success: true });
 }
 

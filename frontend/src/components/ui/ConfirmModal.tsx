@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import Button from "./Button";
 
 interface Props {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface Props {
   onConfirm: () => void;
   onCancel: () => void;
   danger?: boolean;
+  zIndex?: string;
 }
 
 export default function ConfirmModal({
@@ -20,6 +22,7 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
   danger = true,
+  zIndex = "z-50",
 }: Props) {
   return (
     <AnimatePresence>
@@ -32,7 +35,7 @@ export default function ConfirmModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm"
+            className={`fixed inset-0 ${zIndex} bg-foreground/20 backdrop-blur-sm`}
             onClick={onCancel}
           />
 
@@ -43,7 +46,7 @@ export default function ConfirmModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-background border border-border shadow-lg px-6 py-6"
+            className={`fixed ${zIndex} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-background border border-border shadow-lg px-6 py-6`}
           >
             {title && (
               <h3 className="text-base font-medium tracking-wide mb-2">
@@ -54,22 +57,16 @@ export default function ConfirmModal({
               {message}
             </p>
             <div className="flex gap-3">
-              <button
-                onClick={onCancel}
-                className="flex-1 py-2 border border-border text-xs tracking-wide uppercase hover:bg-muted transition-colors"
-              >
+              <Button variant="secondary" onClick={onCancel} className="flex-1 py-2">
                 {cancelLabel}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={danger ? "danger" : "primary"}
                 onClick={onConfirm}
-                className={`flex-1 py-2 text-xs tracking-wide uppercase transition-opacity hover:opacity-80 ${
-                  danger
-                    ? "bg-red-600 text-white"
-                    : "bg-foreground text-background"
-                }`}
+                className="flex-1 py-2"
               >
                 {confirmLabel}
-              </button>
+              </Button>
             </div>
           </motion.div>
         </>

@@ -8,6 +8,7 @@ import { useVenue } from "../context/VenueContext";
 import { aboutService } from "../services/menuService";
 import { localize } from "../utils/localize";
 import { useSeoMeta } from "../hooks/useSeoMeta";
+import { getOptimizedUrl } from "../utils/imageUrl";
 import type { AboutBlock } from "../types/about";
 
 export default function AboutPage() {
@@ -17,9 +18,12 @@ export default function AboutPage() {
   const [blocks, setBlocks] = useState<AboutBlock[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
   useSeoMeta({
     title: `${t.about.heroTitle} | CHASHKA`,
     description: t.about.heroSubtitle,
+    ogImage: `${siteUrl}/images/logo.png`,
+    canonical: `${siteUrl}/about`,
   });
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export default function AboutPage() {
               {block.image && (
                 <div className="mb-6 rounded overflow-hidden">
                   <img
-                    src={block.image}
+                    src={getOptimizedUrl(block.image)}
                     alt={localize(block.title, lang)}
                     loading="lazy"
                     className="w-full h-64 object-cover"

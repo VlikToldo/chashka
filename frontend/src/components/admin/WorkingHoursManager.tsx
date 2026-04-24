@@ -4,6 +4,8 @@ import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useVenue } from "../../context/VenueContext";
 import Loader from "../ui/Loader";
+import Button from "../ui/Button";
+import SectionTitle from "../ui/SectionTitle";
 import ConfirmModal from "../ui/ConfirmModal";
 import PlacesAutocompleteInput from "./PlacesAutocompleteInput";
 import { type TimeSlot, type DayKey, ALL_DAYS, type VenueInfo } from "../../types/admin";
@@ -18,14 +20,6 @@ const DEFAULT_SLOTS: TimeSlot[] = [
 const inputClass =
   "w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors";
 const labelClass = "text-xs tracking-wide uppercase text-muted-foreground";
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-sm font-medium tracking-wide uppercase border-b border-border pb-2 mb-4">
-      {children}
-    </h3>
-  );
-}
 
 export default function WorkingHoursManager() {
   const { t } = useLanguage();
@@ -70,6 +64,10 @@ export default function WorkingHoursManager() {
 
   const handleSaveVenue = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!addressInput.trim()) {
+      setVenueError(c.errorSave);
+      return;
+    }
     setSavingVenue(true);
     setVenueError(null);
     try {
@@ -81,6 +79,7 @@ export default function WorkingHoursManager() {
       refreshVenue();
       setSavedVenue(true);
       setTimeout(() => setSavedVenue(false), 2500);
+      showToast(c.saved, "success");
     } catch {
       setVenueError(c.errorSave);
     } finally {
@@ -150,14 +149,10 @@ export default function WorkingHoursManager() {
 
         {venueError && <p className="text-sm text-red-500">{venueError}</p>}
 
-        <button
-          type="submit"
-          disabled={savingVenue}
-          className="flex items-center gap-1.5 px-5 py-2 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
-        >
+        <Button type="submit" disabled={savingVenue} className="px-5 py-2">
           {savedVenue ? <Check size={14} /> : <Save size={14} />}
           {savingVenue ? c.saving : savedVenue ? c.saved : a.saveVenueBtn}
-        </button>
+        </Button>
       </form>
 
       {/* Working hours section */}
@@ -173,12 +168,9 @@ export default function WorkingHoursManager() {
                 <span className="text-xs tracking-wide uppercase text-muted-foreground">
                   {a.slot} {idx + 1}
                 </span>
-                <button
-                  onClick={() => setConfirmSlotId(slot.id)}
-                  className="text-muted-foreground hover:text-red-500 transition-colors"
-                >
+                <Button variant="ghost-danger" onClick={() => setConfirmSlotId(slot.id)}>
                   <Trash2 size={14} />
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-1.5">
@@ -234,14 +226,10 @@ export default function WorkingHoursManager() {
           {a.addSlot}
         </button>
 
-        <button
-          onClick={handleSaveHours}
-          disabled={saving}
-          className="flex items-center gap-1.5 px-6 py-2.5 bg-foreground text-background text-xs tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
-        >
+        <Button onClick={handleSaveHours} disabled={saving} className="px-6 py-2.5">
           <Save size={14} />
           {saving ? c.saving : saved ? c.saved : a.saveBtn}
-        </button>
+        </Button>
       </div>
 
       <ConfirmModal

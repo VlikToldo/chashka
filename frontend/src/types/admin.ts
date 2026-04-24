@@ -20,6 +20,7 @@ export interface VenueInfo {
 export interface Section {
   _id?: string;
   name: LocalizedString;
+  category: "food" | "drinks";
   order?: number;
 }
 
@@ -61,4 +62,5 @@ export interface AdminMenuItem {
   allergens: LocalizedString;
   yield: LocalizedString;
   image?: string;
+  isExtra?: boolean;
 }

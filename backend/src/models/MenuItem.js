@@ -18,6 +18,7 @@ const menuItemSchema = new mongoose.Schema({
   allergens: multilingualString(),
   yield: multilingualString(),
   image: { type: String },
+  isExtra: { type: Boolean, default: false },
   order: { type: Number, default: 0 },
 });
 

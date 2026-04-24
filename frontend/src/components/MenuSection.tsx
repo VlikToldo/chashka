@@ -4,13 +4,23 @@ import { X } from "lucide-react";
 import type { MenuItem } from "../types/menu";
 import { useLanguage } from "../context/LanguageContext";
 import { localize } from "../utils/localize";
+import { getOptimizedUrl } from "../utils/imageUrl";
 
 interface Props {
   title: string;
   items: MenuItem[];
+  extras?: MenuItem[];
 }
 
-function PhotoModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+function PhotoModal({
+  src,
+  alt,
+  onClose,
+}: {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}) {
   return (
     <AnimatePresence>
       <motion.div
@@ -109,10 +119,13 @@ const MenuItemRow = memo(function MenuItemRow({ item }: { item: MenuItem }) {
                 {item.image ? (
                   <div
                     className="relative w-full max-w-sm aspect-video rounded-lg overflow-hidden bg-muted cursor-zoom-in"
-                    onClick={(e) => { e.stopPropagation(); setPhotoOpen(true); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPhotoOpen(true);
+                    }}
                   >
                     <img
-                      src={item.image}
+                      src={getOptimizedUrl(item.image)}
                       alt={name}
                       loading="lazy"
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -148,7 +161,7 @@ const MenuItemRow = memo(function MenuItemRow({ item }: { item: MenuItem }) {
 
       {item.image && photoOpen && (
         <PhotoModal
-          src={item.image}
+          src={getOptimizedUrl(item.image)}
           alt={name}
           onClose={() => setPhotoOpen(false)}
         />
@@ -157,7 +170,25 @@ const MenuItemRow = memo(function MenuItemRow({ item }: { item: MenuItem }) {
   );
 });
 
-export default function MenuSection({ title, items }: Props) {
+const ExtraItem = memo(function ExtraItem({ item }: { item: MenuItem }) {
+  const { lang } = useLanguage();
+  const name = localize(item.name, lang);
+  const yieldVal = localize(item.yield, lang);
+
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/30 last:border-b-0 sm:[&:nth-last-child(2):not(:nth-child(odd))]:border-b-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-sm font-light truncate">{name}</span>
+        {yieldVal && (
+          <span className="text-[11px] text-muted-foreground/60 shrink-0">{yieldVal}</span>
+        )}
+      </div>
+      <span className="text-sm font-light tabular-nums shrink-0">{item.price}</span>
+    </div>
+  );
+});
+
+export default function MenuSection({ title, items, extras = [] }: Props) {
   const { t } = useLanguage();
   return (
     <AnimatePresence mode="wait">
@@ -171,6 +202,21 @@ export default function MenuSection({ title, items }: Props) {
         <h2 className="text-3xl md:text-4xl font-light text-center mb-12 md:mb-16">
           {title}
         </h2>
+
+        {/* Extras block */}
+        {extras.length > 0 && (
+          <div className="max-w-3xl mx-auto mb-10">
+            <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground/60 text-center mb-5">
+              {t.menu.extras}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 border border-border/40 bg-muted/20">
+              {extras.map((item) => (
+                <ExtraItem key={item._id ?? String(item.name)} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {items.length === 0 ? (
           <p className="text-center text-muted-foreground py-10">
             {t.menu.noSectionItems}

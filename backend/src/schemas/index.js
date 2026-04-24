@@ -37,11 +37,13 @@ export const changePasswordSchema = z.object({
 // Sections
 export const createSectionSchema = z.object({
   name: multilingualString(true),
+  category: z.enum(["food", "drinks"]).optional(),
   order: z.number().optional(),
 });
 
 export const updateSectionSchema = z.object({
   name: multilingualString(false),
+  category: z.enum(["food", "drinks"]).optional(),
   order: z.number().optional(),
 });
 
@@ -53,6 +55,7 @@ export const createMenuItemSchema = z.object({
   ingredients: multilingualString(false),
   allergens: multilingualString(false),
   yield: multilingualString(false),
+  isExtra: z.boolean().optional(),
   order: z.number().optional(),
 });
 
@@ -63,6 +66,7 @@ export const updateMenuItemSchema = z.object({
   ingredients: multilingualString(false),
   allergens: multilingualString(false),
   yield: multilingualString(false),
+  isExtra: z.boolean().optional(),
   order: z.number().optional(),
 });
 
@@ -95,4 +99,9 @@ export const updateWorkingHoursSchema = z.object({
 export const updateVenueSchema = z.object({
   address: multilingualString(false),
   phone: z.string().optional(),
+});
+
+// Cover Photo
+export const updateCoverPhotoPositionSchema = z.object({
+  objectPosition: z.string().min(1).max(100), // e.g. "center center", "50% 50%", "left top"
 });

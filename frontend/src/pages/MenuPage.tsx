@@ -1,3 +1,5 @@
+import { useState, useEffect, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MenuSection from "../components/MenuSection";
@@ -6,15 +8,53 @@ import { useMenuSections } from "../hooks/useMenuSections";
 import { useLanguage } from "../context/LanguageContext";
 import { localize } from "../utils/localize";
 import { useSeoMeta } from "../hooks/useSeoMeta";
+import type { MenuItem } from "../types/menu";
+
+const ExtraRow = memo(function ExtraRow({ item }: { item: MenuItem }) {
+  const { lang } = useLanguage();
+  const name = localize(item.name, lang);
+  const yieldVal = localize(item.yield, lang);
+  return (
+    <div className="flex items-center justify-between gap-4 py-4 border-b border-border/50 last:border-b-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-base font-light">{name}</span>
+        {yieldVal && (
+          <span className="text-xs text-muted-foreground/60 shrink-0">{yieldVal}</span>
+        )}
+      </div>
+      <span className="text-base font-light tabular-nums shrink-0">{item.price}</span>
+    </div>
+  );
+});
 
 export default function MenuPage() {
   const { t, lang } = useLanguage();
-  const { sections, activeSection, setActiveSection, items, loading, error } =
-    useMenuSections();
+  const {
+    filteredSections,
+    categoryFilter,
+    setCategoryFilter,
+    activeSection,
+    setActiveSection,
+    items,
+    categoryExtras,
+    sectionExtras,
+    loading,
+    error,
+  } = useMenuSections();
 
+  const [extrasActive, setExtrasActive] = useState(false);
+
+  // Reset extras tab when category changes
+  useEffect(() => {
+    setExtrasActive(false);
+  }, [categoryFilter]);
+
+  const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
   useSeoMeta({
     title: `${t.hero.title} | CHASHKA`,
     description: t.hero.description,
+    ogImage: `${siteUrl}/images/logo.png`,
+    canonical: `${siteUrl}/`,
   });
 
   return (
@@ -36,17 +76,34 @@ export default function MenuPage() {
         </div>
       </section>
 
-      {/* Category nav */}
-      {sections.length > 0 && (
+      {/* Food / Drinks toggle */}
+      <div className="flex justify-center gap-0 border-b border-border">
+        {(["food", "drinks"] as const).map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategoryFilter(cat)}
+            className={`px-10 py-3 text-sm tracking-[0.2em] uppercase transition-colors ${
+              categoryFilter === cat
+                ? "text-foreground border-b-2 border-foreground -mb-px"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {cat === "food" ? t.menu.food : t.menu.drinks}
+          </button>
+        ))}
+      </div>
+
+      {/* Section nav */}
+      {filteredSections.length > 0 && (
         <nav className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex justify-center gap-1 md:gap-8 py-4 overflow-x-auto">
-              {sections.map((section) => (
+              {filteredSections.map((section) => (
                 <button
                   key={section._id}
-                  onClick={() => setActiveSection(section)}
+                  onClick={() => { setActiveSection(section); setExtrasActive(false); }}
                   className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
-                    activeSection?._id === section._id
+                    !extrasActive && activeSection?._id === section._id
                       ? "text-foreground border-b-2 border-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
@@ -54,24 +111,59 @@ export default function MenuPage() {
                   {localize(section.name, lang)}
                 </button>
               ))}
+              {categoryExtras.length > 0 && (
+                <button
+                  onClick={() => setExtrasActive(true)}
+                  className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
+                    extrasActive
+                      ? "text-foreground border-b-2 border-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.menu.extrasTab}
+                </button>
+              )}
             </div>
           </div>
         </nav>
       )}
 
-      {/* Menu items */}
+      {/* Content */}
       <section className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         {loading && <Loader />}
         {error && (
           <p className="text-center text-red-500 py-20">{t.menu.error}</p>
         )}
-        {!loading && !error && activeSection && (
+
+        {!loading && !error && extrasActive && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="extras-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <h2 className="text-3xl md:text-4xl font-light text-center mb-12 md:mb-16">
+                {t.menu.extrasTab}
+              </h2>
+              <div className="max-w-3xl mx-auto">
+                {categoryExtras.map((item) => (
+                  <ExtraRow key={item._id ?? String(item.name)} item={item} />
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        )}
+
+        {!loading && !error && !extrasActive && activeSection && (
           <MenuSection
             title={localize(activeSection.name, lang)}
             items={items}
+            extras={sectionExtras}
           />
         )}
-        {!loading && !error && sections.length === 0 && (
+        {!loading && !error && filteredSections.length === 0 && (
           <p className="text-center text-muted-foreground py-20">
             {t.menu.noItems}
           </p>

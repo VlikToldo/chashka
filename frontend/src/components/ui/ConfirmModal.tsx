@@ -57,7 +57,11 @@ export default function ConfirmModal({
               {message}
             </p>
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={onCancel} className="flex-1 py-2">
+              <Button
+                variant="secondary"
+                onClick={onCancel}
+                className="flex-1 py-2"
+              >
                 {cancelLabel}
               </Button>
               <Button

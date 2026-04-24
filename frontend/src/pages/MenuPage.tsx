@@ -19,10 +19,14 @@ const ExtraRow = memo(function ExtraRow({ item }: { item: MenuItem }) {
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-base font-light">{name}</span>
         {yieldVal && (
-          <span className="text-xs text-muted-foreground/60 shrink-0">{yieldVal}</span>
+          <span className="text-xs text-muted-foreground/60 shrink-0">
+            {yieldVal}
+          </span>
         )}
       </div>
-      <span className="text-base font-light tabular-nums shrink-0">{item.price}</span>
+      <span className="text-base font-light tabular-nums shrink-0">
+        {item.price}
+      </span>
     </div>
   );
 });
@@ -101,7 +105,10 @@ export default function MenuPage() {
               {filteredSections.map((section) => (
                 <button
                   key={section._id}
-                  onClick={() => { setActiveSection(section); setExtrasActive(false); }}
+                  onClick={() => {
+                    setActiveSection(section);
+                    setExtrasActive(false);
+                  }}
                   className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
                     !extrasActive && activeSection?._id === section._id
                       ? "text-foreground border-b-2 border-foreground"

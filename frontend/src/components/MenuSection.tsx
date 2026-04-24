@@ -180,10 +180,14 @@ const ExtraItem = memo(function ExtraItem({ item }: { item: MenuItem }) {
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm font-light truncate">{name}</span>
         {yieldVal && (
-          <span className="text-[11px] text-muted-foreground/60 shrink-0">{yieldVal}</span>
+          <span className="text-[11px] text-muted-foreground/60 shrink-0">
+            {yieldVal}
+          </span>
         )}
       </div>
-      <span className="text-sm font-light tabular-nums shrink-0">{item.price}</span>
+      <span className="text-sm font-light tabular-nums shrink-0">
+        {item.price}
+      </span>
     </div>
   );
 });

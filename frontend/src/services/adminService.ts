@@ -66,7 +66,9 @@ export const adminService = {
     await api.delete(`/sections/${id}`);
   },
 
-  reorderSections: async (items: { id: string; order: number }[]): Promise<void> => {
+  reorderSections: async (
+    items: { id: string; order: number }[],
+  ): Promise<void> => {
     await api.patch("/sections/reorder", items);
   },
 
@@ -102,7 +104,9 @@ export const adminService = {
     await api.delete(`/menu-items/${id}`);
   },
 
-  reorderMenuItems: async (items: { id: string; order: number }[]): Promise<void> => {
+  reorderMenuItems: async (
+    items: { id: string; order: number }[],
+  ): Promise<void> => {
     await api.patch("/menu-items/reorder", items);
   },
 

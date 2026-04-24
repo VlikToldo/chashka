@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2, X, ImageIcon, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  ImageIcon,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { localize } from "../../utils/localize";
@@ -169,17 +177,35 @@ export default function AboutManager() {
                 </p>
               </div>
               <div className="flex flex-col gap-1 flex-shrink-0">
-                <Button variant="ghost" disabled={i === 0} onClick={() => moveBlock(i, -1)} className="p-1">
+                <Button
+                  variant="ghost"
+                  disabled={i === 0}
+                  onClick={() => moveBlock(i, -1)}
+                  className="p-1"
+                >
                   <ChevronUp size={13} />
                 </Button>
-                <Button variant="ghost" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} className="p-1">
+                <Button
+                  variant="ghost"
+                  disabled={i === blocks.length - 1}
+                  onClick={() => moveBlock(i, 1)}
+                  className="p-1"
+                >
                   <ChevronDown size={13} />
                 </Button>
               </div>
-              <Button variant="ghost" onClick={() => openEdit(block)} className="p-1 flex-shrink-0">
+              <Button
+                variant="ghost"
+                onClick={() => openEdit(block)}
+                className="p-1 flex-shrink-0"
+              >
                 <Pencil size={14} />
               </Button>
-              <Button variant="ghost-danger" onClick={() => block._id && setConfirmId(block._id)} className="p-1 flex-shrink-0">
+              <Button
+                variant="ghost-danger"
+                onClick={() => block._id && setConfirmId(block._id)}
+                className="p-1 flex-shrink-0"
+              >
                 <Trash2 size={14} />
               </Button>
             </li>
@@ -202,85 +228,90 @@ export default function AboutManager() {
           title={editingId ? a.editHeading : a.newHeading}
           onClose={() => setShowForm(false)}
         >
-            <form onSubmit={handleSave} className="px-6 py-5 space-y-5">
-              <LocalizedInput
-                label={a.fields.blockTitle}
-                value={form.title}
-                onChange={(v) => setForm((f) => ({ ...f, title: v }))}
-                placeholder={a.fields.blockTitle}
-                required
-              />
-              <LocalizedInput
-                label={a.fields.text}
-                value={form.text}
-                onChange={(v) => setForm((f) => ({ ...f, text: v }))}
-                placeholder={a.fields.text}
-                multiline
-                rows={6}
-                required
-              />
+          <form onSubmit={handleSave} className="px-6 py-5 space-y-5">
+            <LocalizedInput
+              label={a.fields.blockTitle}
+              value={form.title}
+              onChange={(v) => setForm((f) => ({ ...f, title: v }))}
+              placeholder={a.fields.blockTitle}
+              required
+            />
+            <LocalizedInput
+              label={a.fields.text}
+              value={form.text}
+              onChange={(v) => setForm((f) => ({ ...f, text: v }))}
+              placeholder={a.fields.text}
+              multiline
+              rows={6}
+              required
+            />
 
-              <div className="space-y-2">
-                <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                  {a.fields.photo}
-                </label>
-                <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="preview"
-                        className="w-24 h-24 object-cover rounded"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImagePreview(null);
-                          setPendingFile(null);
-                          setForm((f) => ({ ...f, image: "" }));
-                        }}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-foreground text-background rounded-full flex items-center justify-center"
-                      >
-                        <X size={10} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      onClick={() => fileRef.current?.click()}
-                      className="w-24 h-24 bg-muted rounded flex items-center justify-center cursor-pointer hover:bg-muted/70 transition-colors"
+            <div className="space-y-2">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                {a.fields.photo}
+              </label>
+              <div className="flex items-center gap-4">
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="preview"
+                      className="w-24 h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setPendingFile(null);
+                        setForm((f) => ({ ...f, image: "" }));
+                      }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-foreground text-background rounded-full flex items-center justify-center"
                     >
-                      <ImageIcon size={20} className="text-muted-foreground" />
-                    </div>
-                  )}
-                  <button
-                    type="button"
+                      <X size={10} />
+                    </button>
+                  </div>
+                ) : (
+                  <div
                     onClick={() => fileRef.current?.click()}
-                    className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
+                    className="w-24 h-24 bg-muted rounded flex items-center justify-center cursor-pointer hover:bg-muted/70 transition-colors"
                   >
-                    {c.choosePhoto}
-                  </button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
+                    <ImageIcon size={20} className="text-muted-foreground" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
+                >
+                  {c.choosePhoto}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
               </div>
+            </div>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500">{error}</p>}
 
-              {/* Footer */}
-              <div className="flex gap-3 pt-2 border-t border-border mt-5">
-                <Button type="submit" disabled={saving} className="flex-1 py-2.5">
-                  {saving ? c.saving : c.save}
-                </Button>
-                <Button variant="secondary" type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5">
-                  {c.cancel}
-                </Button>
-              </div>
-            </form>
+            {/* Footer */}
+            <div className="flex gap-3 pt-2 border-t border-border mt-5">
+              <Button type="submit" disabled={saving} className="flex-1 py-2.5">
+                {saving ? c.saving : c.save}
+              </Button>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-6 py-2.5"
+              >
+                {c.cancel}
+              </Button>
+            </div>
+          </form>
         </AdminModal>
       )}
     </div>

@@ -99,8 +99,11 @@ export async function deleteMenuItem(req, res) {
 
 export async function reorderMenuItems(req, res) {
   const updates = req.body;
-  if (!Array.isArray(updates)) return res.status(400).json({ error: "Array expected" });
-  await Promise.all(updates.map(({ id, order }) => MenuItem.findByIdAndUpdate(id, { order })));
+  if (!Array.isArray(updates))
+    return res.status(400).json({ error: "Array expected" });
+  await Promise.all(
+    updates.map(({ id, order }) => MenuItem.findByIdAndUpdate(id, { order })),
+  );
   res.json({ success: true });
 }
 

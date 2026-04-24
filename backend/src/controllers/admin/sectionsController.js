@@ -38,7 +38,10 @@ export async function deleteSection(req, res) {
 
 export async function reorderSections(req, res) {
   const updates = req.body;
-  if (!Array.isArray(updates)) return res.status(400).json({ error: "Array expected" });
-  await Promise.all(updates.map(({ id, order }) => Section.findByIdAndUpdate(id, { order })));
+  if (!Array.isArray(updates))
+    return res.status(400).json({ error: "Array expected" });
+  await Promise.all(
+    updates.map(({ id, order }) => Section.findByIdAndUpdate(id, { order })),
+  );
   res.json({ success: true });
 }

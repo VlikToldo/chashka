@@ -80,7 +80,9 @@ export default function MenuItemManager() {
   const [yieldUnit, setYieldUnit] = useState<"ml" | "l" | "g" | "kg">("ml");
   const fileRef = useRef<HTMLInputElement>(null);
   const reorderTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [itemsBySection, setItemsBySection] = useState<Record<string, AdminMenuItem[]>>({});
+  const [itemsBySection, setItemsBySection] = useState<
+    Record<string, AdminMenuItem[]>
+  >({});
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -216,12 +218,17 @@ export default function MenuItemManager() {
   const sectionName = (id: string) =>
     localize(sections.find((s) => s._id === id)?.name, lang, id);
 
-  const handleReorderSection = (sectionId: string, newOrder: AdminMenuItem[]) => {
+  const handleReorderSection = (
+    sectionId: string,
+    newOrder: AdminMenuItem[],
+  ) => {
     setItemsBySection((prev) => ({ ...prev, [sectionId]: newOrder }));
     if (reorderTimer.current) clearTimeout(reorderTimer.current);
     reorderTimer.current = setTimeout(() => {
       adminService
-        .reorderMenuItems(newOrder.map((item, i) => ({ id: item._id!, order: i })))
+        .reorderMenuItems(
+          newOrder.map((item, i) => ({ id: item._id!, order: i })),
+        )
         .catch(() => showToast(c.errorSave, "error"));
     }, 500);
   };
@@ -233,7 +240,8 @@ export default function MenuItemManager() {
       const map: Record<string, AdminMenuItem[]> = {};
       for (const sid of Object.keys(prev)) map[sid] = [];
       for (const item of newItems) {
-        if (!item.isExtra && item.sectionId in map) map[item.sectionId].push(item);
+        if (!item.isExtra && item.sectionId in map)
+          map[item.sectionId].push(item);
       }
       return map;
     });
@@ -248,7 +256,8 @@ export default function MenuItemManager() {
       .toLowerCase();
 
   const q = search.toLowerCase().trim();
-  const matchesSearch = (item: AdminMenuItem) => !q || allNames(item).includes(q);
+  const matchesSearch = (item: AdminMenuItem) =>
+    !q || allNames(item).includes(q);
 
   return (
     <div className="space-y-6">
@@ -274,7 +283,9 @@ export default function MenuItemManager() {
           ) : (
             <div className="space-y-8">
               {sections.map((section) => {
-                const sectionItems = (itemsBySection[section._id!] ?? []).filter(matchesSearch);
+                const sectionItems = (
+                  itemsBySection[section._id!] ?? []
+                ).filter(matchesSearch);
                 if (sectionItems.length === 0) return null;
                 return (
                   <div key={section._id}>
@@ -290,7 +301,11 @@ export default function MenuItemManager() {
                       className="divide-y divide-border/50"
                     >
                       {sectionItems.map((item) => (
-                        <Reorder.Item key={item._id} value={item} className="list-none">
+                        <Reorder.Item
+                          key={item._id}
+                          value={item}
+                          className="list-none"
+                        >
                           <div className="flex items-center gap-3 py-3">
                             <GripVertical
                               size={14}
@@ -304,17 +319,32 @@ export default function MenuItemManager() {
                               />
                             ) : (
                               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                <ImageIcon size={14} className="text-muted-foreground" />
+                                <ImageIcon
+                                  size={14}
+                                  className="text-muted-foreground"
+                                />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm truncate">{localize(item.name, lang)}</p>
-                              <p className="text-xs text-muted-foreground">{item.price}</p>
+                              <p className="text-sm truncate">
+                                {localize(item.name, lang)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.price}
+                              </p>
                             </div>
-                            <Button variant="ghost" onClick={() => openEdit(item)} className="p-1">
+                            <Button
+                              variant="ghost"
+                              onClick={() => openEdit(item)}
+                              className="p-1"
+                            >
                               <Pencil size={14} />
                             </Button>
-                            <Button variant="ghost-danger" onClick={() => item._id && setConfirmId(item._id)} className="p-1">
+                            <Button
+                              variant="ghost-danger"
+                              onClick={() => item._id && setConfirmId(item._id)}
+                              className="p-1"
+                            >
                               <Trash2 size={14} />
                             </Button>
                           </div>
@@ -344,166 +374,173 @@ export default function MenuItemManager() {
           title={editingId ? a.editHeading : a.newHeading}
           onClose={() => setShowForm(false)}
         >
-            <form onSubmit={handleSave} className="px-6 py-5 space-y-5">
+          <form onSubmit={handleSave} className="px-6 py-5 space-y-5">
+            {/* Section */}
+            <div className="space-y-1">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                {a.fields.section}
+              </label>
+              <CustomSelect
+                value={form.sectionId}
+                onChange={(v) => setForm((f) => ({ ...f, sectionId: v }))}
+                options={
+                  sections.length > 0
+                    ? sections.map((s) => ({
+                        value: s._id!,
+                        label: localize(s.name, lang),
+                      }))
+                    : [{ value: "", label: a.fields.noSection }]
+                }
+              />
+            </div>
 
-              {/* Section */}
-              <div className="space-y-1">
-                <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                  {a.fields.section}
-                </label>
+            <LocalizedInput
+              label={a.fields.name}
+              value={form.name}
+              onChange={(v) => setForm((f) => ({ ...f, name: v }))}
+              placeholder={a.fields.name}
+              required
+            />
+
+            <div className="space-y-1">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                {a.fields.price}
+              </label>
+              <div className="flex items-center gap-2 border-b border-border">
+                <input
+                  value={priceAmount}
+                  onChange={(e) => setPriceAmount(e.target.value)}
+                  className="flex-1 bg-transparent py-2 text-sm outline-none"
+                  placeholder="3.50"
+                  inputMode="decimal"
+                />
                 <CustomSelect
-                  value={form.sectionId}
-                  onChange={(v) => setForm((f) => ({ ...f, sectionId: v }))}
-                  options={
-                    sections.length > 0
-                      ? sections.map(s => ({ value: s._id!, label: localize(s.name, lang) }))
-                      : [{ value: "", label: a.fields.noSection }]
-                  }
+                  value={priceCurrency}
+                  onChange={setPriceCurrency}
+                  options={[
+                    { value: "€", label: "€" },
+                    { value: "$", label: "$" },
+                    { value: "£", label: "£" },
+                  ]}
+                  inline
                 />
               </div>
+            </div>
 
-              <LocalizedInput
-                label={a.fields.name}
-                value={form.name}
-                onChange={(v) => setForm((f) => ({ ...f, name: v }))}
-                placeholder={a.fields.name}
-                required
-              />
-
-              <div className="space-y-1">
-                <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                  {a.fields.price}
-                </label>
-                <div className="flex items-center gap-2 border-b border-border">
-                  <input
-                    value={priceAmount}
-                    onChange={(e) => setPriceAmount(e.target.value)}
-                    className="flex-1 bg-transparent py-2 text-sm outline-none"
-                    placeholder="3.50"
-                    inputMode="decimal"
-                  />
-                  <CustomSelect
-                    value={priceCurrency}
-                    onChange={setPriceCurrency}
-                    options={[
-                      { value: "€", label: "€" },
-                      { value: "$", label: "$" },
-                      { value: "£", label: "£" },
-                    ]}
-                    inline
-                  />
-                </div>
-              </div>
-
-              {/* isExtra toggle */}
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div
-                  onClick={() => setForm((f) => ({ ...f, isExtra: !f.isExtra }))}
-                  className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
-                    form.isExtra ? "bg-foreground" : "bg-border"
+            {/* isExtra toggle */}
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div
+                onClick={() => setForm((f) => ({ ...f, isExtra: !f.isExtra }))}
+                className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
+                  form.isExtra ? "bg-foreground" : "bg-border"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-background rounded-full shadow transition-transform ${
+                    form.isExtra ? "translate-x-4" : ""
                   }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-4 h-4 bg-background rounded-full shadow transition-transform ${
-                      form.isExtra ? "translate-x-4" : ""
-                    }`}
-                  />
-                </div>
-                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                  {a.fields.isExtra}
-                </span>
+                />
+              </div>
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                {a.fields.isExtra}
+              </span>
+            </label>
+
+            {!form.isExtra && (
+              <>
+                <LocalizedInput
+                  label={a.fields.ingredients}
+                  value={form.ingredients}
+                  onChange={(v) => setForm((f) => ({ ...f, ingredients: v }))}
+                  placeholder={a.fields.ingredients}
+                  multiline
+                />
+
+                <LocalizedInput
+                  label={a.fields.allergens}
+                  value={form.allergens}
+                  onChange={(v) => setForm((f) => ({ ...f, allergens: v }))}
+                  placeholder={a.fields.allergens}
+                />
+              </>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                {a.fields.yieldLabel}
               </label>
-
-              {!form.isExtra && (
-                <>
-                  <LocalizedInput
-                    label={a.fields.ingredients}
-                    value={form.ingredients}
-                    onChange={(v) => setForm((f) => ({ ...f, ingredients: v }))}
-                    placeholder={a.fields.ingredients}
-                    multiline
-                  />
-
-                  <LocalizedInput
-                    label={a.fields.allergens}
-                    value={form.allergens}
-                    onChange={(v) => setForm((f) => ({ ...f, allergens: v }))}
-                    placeholder={a.fields.allergens}
-                  />
-                </>
-              )}
-
-              <div className="space-y-1">
-                <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                  {a.fields.yieldLabel}
-                </label>
-                <div className="flex items-center gap-2 border-b border-border">
-                  <input
-                    value={yieldAmount}
-                    onChange={(e) => setYieldAmount(e.target.value)}
-                    className="flex-1 bg-transparent py-2 text-sm outline-none"
-                    placeholder="250"
-                    inputMode="decimal"
-                  />
-                  <CustomSelect
-                    value={yieldUnit}
-                    onChange={(v) => setYieldUnit(v as "ml" | "l" | "g" | "kg")}
-                    options={[
-                      { value: "ml", label: "ml" },
-                      { value: "l", label: "l" },
-                      { value: "g", label: "g" },
-                      { value: "kg", label: "kg" },
-                    ]}
-                    inline
-                  />
-                </div>
+              <div className="flex items-center gap-2 border-b border-border">
+                <input
+                  value={yieldAmount}
+                  onChange={(e) => setYieldAmount(e.target.value)}
+                  className="flex-1 bg-transparent py-2 text-sm outline-none"
+                  placeholder="250"
+                  inputMode="decimal"
+                />
+                <CustomSelect
+                  value={yieldUnit}
+                  onChange={(v) => setYieldUnit(v as "ml" | "l" | "g" | "kg")}
+                  options={[
+                    { value: "ml", label: "ml" },
+                    { value: "l", label: "l" },
+                    { value: "g", label: "g" },
+                    { value: "kg", label: "kg" },
+                  ]}
+                  inline
+                />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                  {a.fields.photo}
-                </label>
-                <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="preview"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                      <ImageIcon size={20} className="text-muted-foreground" />
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
-                  >
-                    {c.choosePhoto}
-                  </button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
+            <div className="space-y-2">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                {a.fields.photo}
+              </label>
+              <div className="flex items-center gap-4">
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="preview"
+                    className="w-16 h-16 rounded-full object-cover"
                   />
-                </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                    <ImageIcon size={20} className="text-muted-foreground" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="text-xs tracking-wide uppercase border-b border-border pb-0.5 hover:border-foreground transition-colors"
+                >
+                  {c.choosePhoto}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
               </div>
+            </div>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500">{error}</p>}
 
-              {/* Footer */}
-              <div className="flex gap-3 pt-2 border-t border-border mt-5">
-                <Button type="submit" disabled={saving} className="flex-1 py-2.5">
-                  {saving ? c.saving : c.save}
-                </Button>
-                <Button variant="secondary" type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5">
-                  {c.cancel}
-                </Button>
-              </div>
-            </form>
+            {/* Footer */}
+            <div className="flex gap-3 pt-2 border-t border-border mt-5">
+              <Button type="submit" disabled={saving} className="flex-1 py-2.5">
+                {saving ? c.saving : c.save}
+              </Button>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-6 py-2.5"
+              >
+                {c.cancel}
+              </Button>
+            </div>
+          </form>
         </AdminModal>
       )}
     </div>

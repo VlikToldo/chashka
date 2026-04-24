@@ -9,7 +9,10 @@ import {
   uploadMenuItemImage as uploadImage,
 } from "../../controllers/admin/menuItemsController.js";
 import { validate } from "../../middleware/validate.js";
-import { createMenuItemSchema, updateMenuItemSchema } from "../../schemas/index.js";
+import {
+  createMenuItemSchema,
+  updateMenuItemSchema,
+} from "../../schemas/index.js";
 
 const router = Router();
 router.get("/", getMenuItems);

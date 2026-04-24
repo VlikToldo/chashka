@@ -41,7 +41,9 @@ export default function SectionManager() {
   // modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSection, setModalSection] = useState<Section | null>(null);
-  const [modalName, setModalName] = useState<LocalizedString>({ ...EMPTY_NAME });
+  const [modalName, setModalName] = useState<LocalizedString>({
+    ...EMPTY_NAME,
+  });
   const [modalCategory, setModalCategory] = useState<"food" | "drinks">("food");
   const [savingSection, setSavingSection] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
@@ -224,18 +226,35 @@ export default function SectionManager() {
 
   const SectionRow = ({ s }: { s: Section }) => (
     <div className="flex items-center gap-2 py-3 border-b border-border/50 last:border-b-0">
-      <GripVertical size={14} className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing" />
+      <GripVertical
+        size={14}
+        className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
+      />
       <span className="flex-1 text-sm">{localize(s.name, lang)}</span>
-      <Button variant="ghost" onClick={() => s._id && openEdit(s)} className="p-1">
+      <Button
+        variant="ghost"
+        onClick={() => s._id && openEdit(s)}
+        className="p-1"
+      >
         <Pencil size={14} />
       </Button>
-      <Button variant="ghost-danger" onClick={() => s._id && setConfirmId(s._id)} className="p-1">
+      <Button
+        variant="ghost-danger"
+        onClick={() => s._id && setConfirmId(s._id)}
+        className="p-1"
+      >
         <Trash2 size={14} />
       </Button>
     </div>
   );
 
-  const ReorderColumn = ({ items, category }: { items: Section[]; category: "food" | "drinks" }) =>
+  const ReorderColumn = ({
+    items,
+    category,
+  }: {
+    items: Section[];
+    category: "food" | "drinks";
+  }) =>
     items.length === 0 ? (
       <p className="py-3 text-sm text-muted-foreground">{a.empty}</p>
     ) : (
@@ -336,172 +355,205 @@ export default function SectionManager() {
           title={modalSection ? a.modalEditTitle : a.modalCreateTitle}
           onClose={closeModal}
         >
-
-            {/* Section form */}
-            <div className="px-6 py-5 space-y-5 border-b border-border">
-              {/* Category toggle */}
-              <div className="flex items-center gap-4">
-                <label className="text-xs tracking-wide uppercase text-muted-foreground shrink-0">
-                  {a.categoryLabel}
-                </label>
-                <div className="flex gap-2">
-                  {(["food", "drinks"] as const).map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setModalCategory(cat)}
-                      className={`px-3 py-1 text-xs tracking-wide uppercase border transition-colors ${
-                        modalCategory === cat
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-border text-muted-foreground hover:border-foreground/50"
-                      }`}
-                    >
-                      {cat === "food" ? a.categoryFood : a.categoryDrinks}
-                    </button>
-                  ))}
-                </div>
+          {/* Section form */}
+          <div className="px-6 py-5 space-y-5 border-b border-border">
+            {/* Category toggle */}
+            <div className="flex items-center gap-4">
+              <label className="text-xs tracking-wide uppercase text-muted-foreground shrink-0">
+                {a.categoryLabel}
+              </label>
+              <div className="flex gap-2">
+                {(["food", "drinks"] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setModalCategory(cat)}
+                    className={`px-3 py-1 text-xs tracking-wide uppercase border transition-colors ${
+                      modalCategory === cat
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-muted-foreground hover:border-foreground/50"
+                    }`}
+                  >
+                    {cat === "food" ? a.categoryFood : a.categoryDrinks}
+                  </button>
+                ))}
               </div>
-
-              {/* Section name */}
-              <LocalizedInput
-                label={a.editLabel}
-                value={modalName}
-                onChange={setModalName}
-                placeholder={a.newLabel}
-              />
-
-              {/* Save section */}
-              <Button onClick={handleSaveSection} disabled={savingSection} className="px-4 py-2">
-                {savingSection && <Loader2 size={13} className="animate-spin" />}
-                {savingSection ? c.saving : c.save}
-              </Button>
             </div>
 
-            {/* Extras — always visible; form disabled until section saved */}
-            <div className="px-6 py-5 space-y-4">
-              <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground">
-                {a.extrasTitle}
-              </h3>
+            {/* Section name */}
+            <LocalizedInput
+              label={a.editLabel}
+              value={modalName}
+              onChange={setModalName}
+              placeholder={a.newLabel}
+            />
 
-              {!activeSectionId ? (
-                <p className="text-sm text-muted-foreground">{a.extrasSaveFirst}</p>
-              ) : loadingExtras ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 size={18} className="animate-spin text-muted-foreground" />
-                </div>
-              ) : extras.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{a.extrasEmpty}</p>
-              ) : (
-                <ul className="divide-y divide-border/40">
-                  {extras.map((ex) => (
-                    <li key={ex._id} className="py-2.5 flex items-center gap-3">
-                      <span className="flex-1 text-sm">{localize(ex.name, lang)}</span>
-                      {ex.yield?.en && (
-                        <span className="text-xs text-muted-foreground">{ex.yield.en}</span>
-                      )}
-                      <span className="text-sm font-light">{ex.price}</span>
-                      <Button variant="ghost-danger" onClick={() => ex._id && setConfirmExtraId(ex._id)} className="p-1 shrink-0">
-                        <Trash2 size={13} />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            {/* Save section */}
+            <Button
+              onClick={handleSaveSection}
+              disabled={savingSection}
+              className="px-4 py-2"
+            >
+              {savingSection && <Loader2 size={13} className="animate-spin" />}
+              {savingSection ? c.saving : c.save}
+            </Button>
+          </div>
 
-              {/* Add extra form — only when section saved */}
-              {activeSectionId && (
-                <div className="border border-border/60 p-4 space-y-4 bg-muted/10">
-                  <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
-                    {a.extrasAddBtn}
-                  </p>
+          {/* Extras — always visible; form disabled until section saved */}
+          <div className="px-6 py-5 space-y-4">
+            <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground">
+              {a.extrasTitle}
+            </h3>
 
-                  <LocalizedInput
-                    label={a.extrasNameLabel}
-                    value={newExtra.name}
-                    onChange={(v) => setNewExtra((p) => ({ ...p, name: v }))}
-                    placeholder={a.extrasNameLabel}
-                  />
+            {!activeSectionId ? (
+              <p className="text-sm text-muted-foreground">
+                {a.extrasSaveFirst}
+              </p>
+            ) : loadingExtras ? (
+              <div className="flex justify-center py-4">
+                <Loader2
+                  size={18}
+                  className="animate-spin text-muted-foreground"
+                />
+              </div>
+            ) : extras.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{a.extrasEmpty}</p>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {extras.map((ex) => (
+                  <li key={ex._id} className="py-2.5 flex items-center gap-3">
+                    <span className="flex-1 text-sm">
+                      {localize(ex.name, lang)}
+                    </span>
+                    {ex.yield?.en && (
+                      <span className="text-xs text-muted-foreground">
+                        {ex.yield.en}
+                      </span>
+                    )}
+                    <span className="text-sm font-light">{ex.price}</span>
+                    <Button
+                      variant="ghost-danger"
+                      onClick={() => ex._id && setConfirmExtraId(ex._id)}
+                      className="p-1 shrink-0"
+                    >
+                      <Trash2 size={13} />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-                  <div className="flex gap-3">
-                    {/* Yield */}
-                    <div className="flex-1 space-y-1">
-                      <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                        {a.extrasYield}
-                      </label>
-                      <div className="flex items-center gap-1 border-b border-border">
-                        <input
-                          value={newExtra.yieldAmount}
-                          onChange={(e) =>
-                            setNewExtra((p) => ({ ...p, yieldAmount: e.target.value }))
-                          }
-                          placeholder="30"
-                          inputMode="decimal"
-                          className="flex-1 bg-transparent py-1.5 text-sm outline-none"
-                        />
-                        <CustomSelect
-                          value={newExtra.yieldUnit}
-                          onChange={(v) => setNewExtra((p) => ({ ...p, yieldUnit: v as "ml" | "l" | "g" | "kg" }))}
-                          options={[
-                            { value: "ml", label: "ml" },
-                            { value: "l", label: "l" },
-                            { value: "g", label: "g" },
-                            { value: "kg", label: "kg" },
-                          ]}
-                          inline
-                        />
-                      </div>
-                    </div>
-                    {/* Price */}
-                    <div className="flex-1 space-y-1">
-                      <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                        {a.extrasPrice}
-                      </label>
-                      <div className="flex items-center gap-1 border-b border-border">
-                        <input
-                          value={newExtra.priceAmount}
-                          onChange={(e) =>
-                            setNewExtra((p) => ({ ...p, priceAmount: e.target.value }))
-                          }
-                          placeholder="0.50"
-                          inputMode="decimal"
-                          className="flex-1 bg-transparent py-1.5 text-sm outline-none"
-                        />
-                        <CustomSelect
-                          value={newExtra.priceCurrency}
-                          onChange={(v) => setNewExtra((p) => ({ ...p, priceCurrency: v }))}
-                          options={[
-                            { value: "€", label: "€" },
-                            { value: "$", label: "$" },
-                            { value: "£", label: "£" },
-                          ]}
-                          inline
-                        />
-                      </div>
+            {/* Add extra form — only when section saved */}
+            {activeSectionId && (
+              <div className="border border-border/60 p-4 space-y-4 bg-muted/10">
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
+                  {a.extrasAddBtn}
+                </p>
+
+                <LocalizedInput
+                  label={a.extrasNameLabel}
+                  value={newExtra.name}
+                  onChange={(v) => setNewExtra((p) => ({ ...p, name: v }))}
+                  placeholder={a.extrasNameLabel}
+                />
+
+                <div className="flex gap-3">
+                  {/* Yield */}
+                  <div className="flex-1 space-y-1">
+                    <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                      {a.extrasYield}
+                    </label>
+                    <div className="flex items-center gap-1 border-b border-border">
+                      <input
+                        value={newExtra.yieldAmount}
+                        onChange={(e) =>
+                          setNewExtra((p) => ({
+                            ...p,
+                            yieldAmount: e.target.value,
+                          }))
+                        }
+                        placeholder="30"
+                        inputMode="decimal"
+                        className="flex-1 bg-transparent py-1.5 text-sm outline-none"
+                      />
+                      <CustomSelect
+                        value={newExtra.yieldUnit}
+                        onChange={(v) =>
+                          setNewExtra((p) => ({
+                            ...p,
+                            yieldUnit: v as "ml" | "l" | "g" | "kg",
+                          }))
+                        }
+                        options={[
+                          { value: "ml", label: "ml" },
+                          { value: "l", label: "l" },
+                          { value: "g", label: "g" },
+                          { value: "kg", label: "kg" },
+                        ]}
+                        inline
+                      />
                     </div>
                   </div>
-
-                  <button
-                    onClick={handleAddExtra}
-                    disabled={addingExtra}
-                    className="flex items-center gap-1.5 px-3 py-1.5 border border-foreground text-xs tracking-wide uppercase hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
-                  >
-                    {addingExtra ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <Plus size={12} />
-                    )}
-                    {c.add}
-                  </button>
+                  {/* Price */}
+                  <div className="flex-1 space-y-1">
+                    <label className="text-xs tracking-wide uppercase text-muted-foreground">
+                      {a.extrasPrice}
+                    </label>
+                    <div className="flex items-center gap-1 border-b border-border">
+                      <input
+                        value={newExtra.priceAmount}
+                        onChange={(e) =>
+                          setNewExtra((p) => ({
+                            ...p,
+                            priceAmount: e.target.value,
+                          }))
+                        }
+                        placeholder="0.50"
+                        inputMode="decimal"
+                        className="flex-1 bg-transparent py-1.5 text-sm outline-none"
+                      />
+                      <CustomSelect
+                        value={newExtra.priceCurrency}
+                        onChange={(v) =>
+                          setNewExtra((p) => ({ ...p, priceCurrency: v }))
+                        }
+                        options={[
+                          { value: "€", label: "€" },
+                          { value: "$", label: "$" },
+                          { value: "£", label: "£" },
+                        ]}
+                        inline
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-border flex justify-end">
-              <Button variant="ghost" onClick={closeModal} className="px-4 py-2 text-xs tracking-wide uppercase">
-                {activeSectionId ? a.done : c.cancel}
-              </Button>
-            </div>
+                <button
+                  onClick={handleAddExtra}
+                  disabled={addingExtra}
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-foreground text-xs tracking-wide uppercase hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
+                >
+                  {addingExtra ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Plus size={12} />
+                  )}
+                  {c.add}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-border flex justify-end">
+            <Button
+              variant="ghost"
+              onClick={closeModal}
+              className="px-4 py-2 text-xs tracking-wide uppercase"
+            >
+              {activeSectionId ? a.done : c.cancel}
+            </Button>
+          </div>
         </AdminModal>
       )}
     </div>

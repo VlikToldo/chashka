@@ -58,7 +58,13 @@ function PhotoModal({
   );
 }
 
-const MenuItemRow = memo(function MenuItemRow({ item, index = 0 }: { item: MenuItem; index?: number }) {
+const MenuItemRow = memo(function MenuItemRow({
+  item,
+  index = 0,
+}: {
+  item: MenuItem;
+  index?: number;
+}) {
   const { lang, t } = useLanguage();
   const name = localize(item.name, lang);
   const ingredients = localize(item.ingredients, lang);
@@ -74,7 +80,11 @@ const MenuItemRow = memo(function MenuItemRow({ item, index = 0 }: { item: MenuI
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.45, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) }}
+        transition={{
+          duration: 0.45,
+          ease: "easeOut",
+          delay: Math.min(index * 0.05, 0.4),
+        }}
         className="group border-b border-border/50 last:border-b-0"
       >
         <div
@@ -172,13 +182,29 @@ const MenuItemRow = memo(function MenuItemRow({ item, index = 0 }: { item: MenuI
   );
 });
 
-const ExtraItem = memo(function ExtraItem({ item }: { item: MenuItem }) {
+const ExtraItem = memo(function ExtraItem({
+  item,
+  index = 0,
+}: {
+  item: MenuItem;
+  index?: number;
+}) {
   const { lang } = useLanguage();
   const name = localize(item.name, lang);
   const yieldVal = localize(item.yield, lang);
 
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/30 last:border-b-0 sm:[&:nth-last-child(2):not(:nth-child(odd))]:border-b-0">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{
+        duration: 0.4,
+        ease: "easeOut",
+        delay: Math.min(index * 0.04, 0.3),
+      }}
+      className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/30 last:border-b-0 sm:[&:nth-last-child(2):not(:nth-child(odd))]:border-b-0"
+    >
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm font-light truncate">{name}</span>
         {yieldVal && (
@@ -190,7 +216,7 @@ const ExtraItem = memo(function ExtraItem({ item }: { item: MenuItem }) {
       <span className="text-sm font-light tabular-nums shrink-0">
         {item.price}
       </span>
-    </div>
+    </motion.div>
   );
 });
 
@@ -205,22 +231,38 @@ export default function MenuSection({ title, items, extras = [] }: Props) {
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        <h2 className="text-3xl md:text-4xl font-light text-center mb-12 md:mb-16">
+        <motion.h2
+          className="text-3xl md:text-4xl font-light text-center mb-12 md:mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           {title}
-        </h2>
+        </motion.h2>
 
         {/* Extras block */}
         {extras.length > 0 && (
-          <div className="max-w-3xl mx-auto mb-10">
+          <motion.div
+            className="max-w-3xl mx-auto mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground/60 text-center mb-5">
               {t.menu.extras}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 border border-border/40 bg-muted/20">
-              {extras.map((item) => (
-                <ExtraItem key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en} item={item} />
+              {extras.map((item, i) => (
+                <ExtraItem
+                  key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en}
+                  item={item}
+                  index={i}
+                />
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {items.length === 0 ? (
@@ -230,7 +272,11 @@ export default function MenuSection({ title, items, extras = [] }: Props) {
         ) : (
           <div className="max-w-3xl mx-auto space-y-0">
             {items.map((item, i) => (
-              <MenuItemRow key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en} item={item} index={i} />
+              <MenuItemRow
+                key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en}
+                item={item}
+                index={i}
+              />
             ))}
           </div>
         )}

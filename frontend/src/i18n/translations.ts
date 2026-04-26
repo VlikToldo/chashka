@@ -41,6 +41,7 @@ export const translations = {
       location: "UBICACIÓN",
       hours: "HORARIO",
       follow: "SÍGUENOS",
+      instagramNotAdded: "El enlace de Instagram aún no está añadido",
       phone: "TELÉFONO",
       schedule: ["Lun – Vie: 8:00 – 18:00", "Sáb – Dom: 9:00 – 19:00"],
       love: "con amor de nuestra familia",
@@ -49,6 +50,8 @@ export const translations = {
     about: {
       heroTitle: "Nosotros",
       heroSubtitle: "Una taza, una historia",
+      seoDescription:
+        "CHASHKA — café de especialidad en El Campello, Valencia. Granos seleccionados con amor de productores de todo el mundo, cada taza preparada con pasión.",
       storyTitle: "Nuestra historia",
       storyText:
         "CHASHKA nació del amor por el café de especialidad y el deseo de compartirlo con nuestra comunidad en El Campello. Seleccionamos cada grano con cuidado, trabajando directamente con productores de todo el mundo para garantizar la máxima calidad en cada taza.",
@@ -65,6 +68,7 @@ export const translations = {
         menu: "Artículos",
         hours: "Establecimiento",
         cover: "Portada",
+        splash: "Bienvenida",
         about: "Nosotros",
       },
       profile: {
@@ -82,6 +86,11 @@ export const translations = {
         venueTitle: "Información del establecimiento",
         address: "Dirección",
         phone: "Teléfono",
+        emailVerifiedStatus: "Email verificado",
+        emailNotVerifiedBanner:
+          "Email no verificado. Revisa tu correo o vuelve a enviar el enlace.",
+        resendVerification: "Reenviar",
+        resent: "Enviado ✓",
       },
       sections: {
         title: "Secciones del menú",
@@ -138,6 +147,10 @@ export const translations = {
         addSlot: "Añadir intervalo",
         saveBtn: "Guardar horario",
         saveVenueBtn: "Guardar establecimiento",
+        instagram: "Instagram",
+        mapEmbed: "Mapa de Google Maps",
+        mapEmbedHint:
+          "Pega el código <iframe> de Google Maps → Compartir → Insertar mapa",
       },
       cover: {
         title: "Foto de portada",
@@ -147,6 +160,19 @@ export const translations = {
         saveBtn: "Guardar foto",
         uploadingBtn: "Subiendo...",
         savedBtn: "¡Guardado!",
+      },
+      splash: {
+        title: "Pantalla de bienvenida",
+        desc: "Foto que cubre la pantalla al abrir el sitio (una vez por sesión)",
+        formatWarning:
+          "⚠️ Formato recomendado: retrato 9:16, p. ej. 1080×1920px. La foto cubrirá casi toda la pantalla del cliente en vertical. Usa una imagen de alta resolución para una visualización nítida.",
+        chooseBtn: "Elegir foto",
+        deleteBtn: "Eliminar foto",
+        enabledLabel: "Mostrar pantalla de bienvenida a los visitantes",
+        noPhoto: "Sin foto de bienvenida",
+        uploadingBtn: "Subiendo...",
+        savedBtn: "¡Guardado!",
+        saveBtn: "Guardar",
       },
       about: {
         title: "Nosotros",
@@ -222,6 +248,7 @@ export const translations = {
       location: "LOCATION",
       hours: "HOURS",
       follow: "FOLLOW US",
+      instagramNotAdded: "Instagram link not added yet",
       phone: "PHONE",
       schedule: ["Mon – Fri: 8:00 – 18:00", "Sat – Sun: 9:00 – 19:00"],
       love: "with love from our family",
@@ -230,6 +257,8 @@ export const translations = {
     about: {
       heroTitle: "About us",
       heroSubtitle: "One cup, one story",
+      seoDescription:
+        "CHASHKA — specialty coffee in El Campello, Valencia. Carefully selected beans from producers around the world, every cup made with love.",
       storyTitle: "Our story",
       storyText:
         "CHASHKA was born from a love of specialty coffee and the desire to share it with our community in El Campello. We carefully select every bean, working directly with producers from around the world to ensure the highest quality in every cup.",
@@ -246,6 +275,7 @@ export const translations = {
         menu: "Items",
         hours: "Venue",
         cover: "Cover",
+        splash: "Welcome",
         about: "About",
       },
       profile: {
@@ -263,6 +293,11 @@ export const translations = {
         venueTitle: "Venue information",
         address: "Address",
         phone: "Phone",
+        emailVerifiedStatus: "Email verified",
+        emailNotVerifiedBanner:
+          "Email not verified. Check your inbox or resend the link.",
+        resendVerification: "Resend",
+        resent: "Sent ✓",
       },
       sections: {
         title: "Menu sections",
@@ -319,6 +354,10 @@ export const translations = {
         addSlot: "Add slot",
         saveBtn: "Save hours",
         saveVenueBtn: "Save venue",
+        instagram: "Instagram",
+        mapEmbed: "Google Maps embed",
+        mapEmbedHint:
+          "Paste the <iframe> code from Google Maps → Share → Embed a map",
       },
       cover: {
         title: "Cover photo",
@@ -328,6 +367,19 @@ export const translations = {
         saveBtn: "Save photo",
         uploadingBtn: "Uploading...",
         savedBtn: "Saved!",
+      },
+      splash: {
+        title: "Welcome screen",
+        desc: "Photo shown when the site opens (once per session)",
+        formatWarning:
+          "⚠️ Recommended format: portrait 9:16, e.g. 1080×1920px. The photo will cover almost the entire screen in vertical mode. Use a high-resolution image for a sharp display.",
+        chooseBtn: "Choose photo",
+        deleteBtn: "Delete photo",
+        enabledLabel: "Show welcome screen to visitors",
+        noPhoto: "No welcome photo set",
+        uploadingBtn: "Uploading...",
+        savedBtn: "Saved!",
+        saveBtn: "Save",
       },
       about: {
         title: "About us",
@@ -403,6 +455,7 @@ export const translations = {
       location: "АДРЕСА",
       hours: "ГРАФІК",
       follow: "МИ В INSTAGRAM",
+      instagramNotAdded: "Посилання на Instagram ще не додано",
       phone: "ТЕЛЕФОН",
       schedule: ["Пн – Пт: 8:00 – 18:00", "Сб – Нд: 9:00 – 19:00"],
       love: "з любов'ю від нашої родини",
@@ -411,6 +464,8 @@ export const translations = {
     about: {
       heroTitle: "Про нас",
       heroSubtitle: "Одна чашка — одна історія",
+      seoDescription:
+        "CHASHKA — спеціалізована кава в Ель-Кампельо, Валенсія. Ретельно відібрані зерна від виробників з усього світу, кожна чашка з любов'ю.",
       storyTitle: "Наша історія",
       storyText:
         "CHASHKA народилась із любові до спеціалізованої кави та бажання поділитися нею з нашою спільнотою в Ель-Кампельо. Ми ретельно відбираємо кожне зерно, співпрацюючи напряму з виробниками з усього світу, щоб гарантувати найвищу якість у кожній чашці.",
@@ -427,6 +482,7 @@ export const translations = {
         menu: "Позиції",
         hours: "Заклад",
         cover: "Заставка",
+        splash: "Вітальний",
         about: "Про нас",
       },
       profile: {
@@ -444,6 +500,11 @@ export const translations = {
         venueTitle: "Інформація про заклад",
         address: "Адреса",
         phone: "Телефон",
+        emailVerifiedStatus: "Email підтверджено",
+        emailNotVerifiedBanner:
+          "Email не підтверджено. Перевірте пошту або надішліть лист повторно.",
+        resendVerification: "Надіслати ще раз",
+        resent: "Надіслано ✓",
       },
       sections: {
         title: "Розділи меню",
@@ -500,6 +561,10 @@ export const translations = {
         addSlot: "Додати слот",
         saveBtn: "Зберегти графік",
         saveVenueBtn: "Зберегти заклад",
+        instagram: "Instagram",
+        mapEmbed: "Карта Google Maps",
+        mapEmbedHint:
+          "Встав код <iframe> з Google Maps → Поділитись → Вставити карту",
       },
       cover: {
         title: "Фото заставки",
@@ -509,6 +574,19 @@ export const translations = {
         saveBtn: "Зберегти фото",
         uploadingBtn: "Завантаження...",
         savedBtn: "Збережено!",
+      },
+      splash: {
+        title: "Вітальний екран",
+        desc: "Фото, що відображається при відкритті сайту (один раз за сесію)",
+        formatWarning:
+          "⚠️ Рекомендований формат: вертикальний 9:16, наприклад 1080×1920px. Фото займатиме майже весь екран клієнта у вертикальному положенні. Використовуйте зображення високої роздільної здатності для чіткого відображення.",
+        chooseBtn: "Обрати фото",
+        deleteBtn: "Видалити фото",
+        enabledLabel: "Показувати вітальний екран відвідувачам",
+        noPhoto: "Фото не встановлено",
+        uploadingBtn: "Завантаження...",
+        savedBtn: "Збережено!",
+        saveBtn: "Зберегти",
       },
       about: {
         title: "Про нас",

@@ -3,6 +3,7 @@ import type { LocalizedString } from "./menu";
 export interface AdminUser {
   _id: string;
   email: string;
+  emailVerified?: boolean;
 }
 
 export interface AdminProfile {
@@ -10,11 +11,14 @@ export interface AdminProfile {
   email: string;
   firstName: string;
   lastName: string;
+  emailVerified: boolean;
 }
 
 export interface VenueInfo {
   address: LocalizedString;
   phone: string;
+  mapEmbedUrl?: string;
+  instagramUrl?: string;
 }
 
 export interface Section {

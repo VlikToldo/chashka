@@ -20,6 +20,28 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Normalize API errors to a single { message } shape + handle 401
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("admin_user");
+      window.location.href = "/admin/login";
+      return Promise.reject(new Error("Сесія завершена. Увійдіть знову."));
+    }
+    const message: string =
+      error?.response?.data?.message ??
+      error?.response?.data?.error ??
+      (error?.code === "ERR_NETWORK"
+        ? "Сервер недоступний. Перевірте з'єднання."
+        : null) ??
+      error?.message ??
+      "Невідома помилка";
+    return Promise.reject(new Error(message));
+  },
+);
+
 export const adminService = {
   // Auth
   login: async (
@@ -192,10 +214,18 @@ export const adminService = {
   uploadAboutBlockImage: async (
     id: string,
     file: File,
-  ): Promise<{ image: string }> => {
+  ): Promise<{ url: string }> => {
     const form = new FormData();
     form.append("image", file);
     const { data } = await api.post(`/about/${id}/image`, form);
+    return data;
+  },
+
+  updateAboutBlockImages: async (
+    id: string,
+    images: { url: string; position: string }[],
+  ): Promise<AboutBlock> => {
+    const { data } = await api.put(`/about/${id}/images`, { images });
     return data;
   },
 
@@ -225,8 +255,87 @@ export const adminService = {
     return data;
   },
 
-  updateVenue: async (venue: { address?: string; phone?: string }): Promise<VenueInfo> => {
+  updateVenue: async (venue: {
+    address?: string;
+    phone?: string;
+    mapEmbedUrl?: string;
+    instagramUrl?: string;
+  }): Promise<VenueInfo> => {
     const { data } = await api.put("/venue", venue);
     return data;
+  },
+
+  // Splash photo
+  getSplashPhoto: async (): Promise<{
+    image: string | null;
+    objectPosition: string;
+    enabled: boolean;
+  }> => {
+    const { data } = await api.get("/splash");
+    return data;
+  },
+
+  uploadSplashPhoto: async (
+    file: File,
+    objectPosition?: string,
+  ): Promise<{
+    image: string | null;
+    objectPosition: string;
+    enabled: boolean;
+  }> => {
+    const form = new FormData();
+    form.append("image", file);
+    if (objectPosition) form.append("objectPosition", objectPosition);
+    const { data } = await api.post("/splash", form);
+    return data;
+  },
+
+  updateSplashPhotoPosition: async (
+    objectPosition: string,
+  ): Promise<{
+    image: string | null;
+    objectPosition: string;
+    enabled: boolean;
+  }> => {
+    const { data } = await api.put("/splash/position", { objectPosition });
+    return data;
+  },
+
+  updateSplashPhotoEnabled: async (
+    enabled: boolean,
+  ): Promise<{
+    image: string | null;
+    objectPosition: string;
+    enabled: boolean;
+  }> => {
+    const { data } = await api.patch("/splash/enabled", { enabled });
+    return data;
+  },
+
+  deleteSplashPhoto: async (): Promise<{
+    image: string | null;
+    objectPosition: string;
+    enabled: boolean;
+  }> => {
+    const { data } = await api.delete("/splash");
+    return data;
+  },
+
+  // Email verification
+  verifyEmail: async (token: string): Promise<void> => {
+    await api.get(`/verify-email/${token}`);
+  },
+
+  resendVerification: async (): Promise<void> => {
+    await api.post("/resend-verification");
+  },
+
+  // Password recovery
+  forgotPassword: async (email: string): Promise<void> => {
+    await api.post("/forgot-password", { email });
+  },
+
+  resetPassword: async (token: string, newPassword: string): Promise<void> => {
+    await api.post(`/reset-password/${token}`, { newPassword });
   },
 };

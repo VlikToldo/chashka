@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { adminService } from "../../services/adminService";
 import { useAuth } from "../../context/AuthContext";
-import { useToast } from "../../context/ToastContext";
 
 export default function AdminRegisterPage() {
   const { login } = useAuth();
-  const { showToast } = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,28 +22,19 @@ export default function AdminRegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token, user } = await adminService.register(email, password, secretCode);
+      const { token, user } = await adminService.register(
+        email,
+        password,
+        secretCode,
+      );
       login(token, user);
       navigate("/admin");
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const status = err.response?.status;
-        const message = err.response?.data?.error ?? "";
-
-        if (status === 403) {
-          if (message === "Maximum number of admins reached") {
-            showToast("Доступ заблоковано: досягнуто максимальну кількість адмінів (3)", "warning");
-          } else {
-            showToast("Доступ заблоковано: невірний секретний код", "warning");
-          }
-          return;
-        }
-        if (status === 409) {
-          setError("Цей email вже зареєстровано");
-          return;
-        }
-      }
-      setError("Помилка реєстрації. Спробуйте ще раз.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Помилка реєстрації. Спробуйте ще раз.",
+      );
     } finally {
       setLoading(false);
     }

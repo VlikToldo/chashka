@@ -37,17 +37,20 @@ export function positionToString(pos: PhotoPosition): string {
 
 /**
  * Style for the wrapper div that sizes and positions the image inside a
- * `position: relative; overflow: hidden` container (the circle).
+ * `position: relative; overflow: hidden` container.
  *
- * At scale=1 the image fills the circle by its shorter side (Telegram-style).
+ * At scale=1 the image covers the container with no empty edges (CSS cover logic).
  * x, y are pan offset in % of container (0 = centered).
+ *
+ * @param pos      - photo position/scale/ar data
+ * @param frameAr  - aspect ratio (width/height) of the container; defaults to 1 (square)
  */
-export function getWrapperStyle(pos: PhotoPosition): CSSProperties {
+export function getWrapperStyle(pos: PhotoPosition, frameAr = 1): CSSProperties {
   const ar = pos.ar ?? 1;
   const s = pos.scale;
-  // Size as % of container: shorter side = 100% * scale
-  const wPct = (ar >= 1 ? ar * s : s) * 100;
-  const hPct = (ar >= 1 ? s : s / ar) * 100;
+  // Cover logic: compare image ar vs frame ar to decide which side fills 100%
+  const wPct = (ar >= frameAr ? (ar / frameAr) * s : s) * 100;
+  const hPct = (ar >= frameAr ? s : (frameAr / ar) * s) * 100;
 
   return {
     position: "absolute",
@@ -73,13 +76,16 @@ export const imgStyle: CSSProperties = {
 };
 
 /**
- * Clamp x/y so the image always covers the circle (no empty edges visible).
+ * Clamp x/y so the image always covers the container (no empty edges visible).
+ *
+ * @param pos      - photo position data
+ * @param frameAr  - aspect ratio (width/height) of the container; defaults to 1 (square)
  */
-export function clampPosition(pos: PhotoPosition): PhotoPosition {
+export function clampPosition(pos: PhotoPosition, frameAr = 1): PhotoPosition {
   const ar = pos.ar ?? 1;
   const s = pos.scale;
-  const wPct = (ar >= 1 ? ar * s : s) * 100;
-  const hPct = (ar >= 1 ? s : s / ar) * 100;
+  const wPct = (ar >= frameAr ? (ar / frameAr) * s : s) * 100;
+  const hPct = (ar >= frameAr ? s : (frameAr / ar) * s) * 100;
 
   const maxX = Math.max(0, (wPct - 100) / 2);
   const maxY = Math.max(0, (hPct - 100) / 2);

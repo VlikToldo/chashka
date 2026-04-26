@@ -11,6 +11,7 @@ import type { VenueInfo, TimeSlot } from "../types/admin";
 const DEFAULT_VENUE: VenueInfo = {
   address: { uk: "", en: "", es: "" },
   phone: "",
+  mapEmbedUrl: "",
 };
 
 interface VenueContextValue {

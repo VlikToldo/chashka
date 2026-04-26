@@ -69,6 +69,8 @@ export function useSeoMeta({
     }
 
     setMeta("description", description);
+    setOgMeta("og:type", "website");
+    setOgMeta("og:site_name", "CHASHKA Coffee Shop");
     setOgMeta("og:title", ogTitle ?? title);
     setOgMeta("og:description", ogDescription ?? description);
     setOgMeta("og:url", canonical ?? `${SITE_URL}${window.location.pathname}`);

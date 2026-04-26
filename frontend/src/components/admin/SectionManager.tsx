@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Reorder } from "framer-motion";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
+import { useLongPressDrag } from "../../hooks/useLongPressDrag";
 import { Pencil, Trash2, Plus, Loader2, GripVertical } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
@@ -30,29 +31,103 @@ function SectionRow({
   lang,
   onEdit,
   onDelete,
-  onGripPointerDown,
+  onRowPointerDown,
+  pressing,
+  isDragging,
 }: {
   s: Section;
   lang: Lang;
   onEdit: (s: Section) => void;
   onDelete: (id: string) => void;
-  onGripPointerDown: () => void;
+  onRowPointerDown: (e: React.PointerEvent) => void;
+  pressing: boolean;
+  isDragging: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 py-3 border-b border-border/50 last:border-b-0">
+    <div
+      className={`flex items-center gap-2 py-3 border-b border-border/50 last:border-b-0 select-none transition-shadow duration-150
+        ${isDragging ? "rounded-sm shadow-md ring-1 ring-foreground/10 bg-background cursor-grabbing" : ""}
+        ${pressing && !isDragging ? "cursor-grab" : ""}
+      `}
+      onPointerDown={onRowPointerDown}
+    >
       <GripVertical
         size={14}
-        className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
-        onPointerDown={onGripPointerDown}
+        className={`shrink-0 transition-colors duration-200 ${
+          pressing || isDragging ? "text-foreground animate-pulse" : "text-muted-foreground/40"
+        }`}
       />
       <span className="flex-1 text-sm">{localize(s.name, lang)}</span>
-      <Button variant="ghost" onClick={() => s._id && onEdit(s)} className="p-1">
+      <Button
+        variant="ghost"
+        onClick={() => s._id && onEdit(s)}
+        className="p-1"
+      >
         <Pencil size={14} />
       </Button>
-      <Button variant="ghost-danger" onClick={() => s._id && onDelete(s._id)} className="p-1">
+      <Button
+        variant="ghost-danger"
+        onClick={() => s._id && onDelete(s._id)}
+        className="p-1"
+      >
         <Trash2 size={14} />
       </Button>
     </div>
+  );
+}
+
+function SortableSection({
+  s,
+  lang,
+  onEdit,
+  onDelete,
+  onAutoScroll,
+}: {
+  s: Section;
+  lang: Lang;
+  onEdit: (s: Section) => void;
+  onDelete: (id: string) => void;
+  onAutoScroll: () => void;
+}) {
+  const { controls, onPointerDown, pressing } = useLongPressDrag(500);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onPointerDown(e);
+      onAutoScroll();
+    },
+    [onPointerDown, onAutoScroll],
+  );
+
+  useEffect(() => {
+    if (isDragging) {
+      document.body.style.cursor = "grabbing";
+    } else {
+      document.body.style.cursor = "";
+    }
+    return () => { document.body.style.cursor = ""; };
+  }, [isDragging]);
+
+  return (
+    <Reorder.Item
+      value={s}
+      className="list-none"
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => setIsDragging(false)}
+    >
+      <SectionRow
+        s={s}
+        lang={lang}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onRowPointerDown={handlePointerDown}
+        pressing={pressing}
+        isDragging={isDragging}
+      />
+    </Reorder.Item>
   );
 }
 
@@ -64,7 +139,7 @@ function ReorderColumn({
   onReorder,
   onEdit,
   onDelete,
-  onGripPointerDown,
+  onAutoScroll,
 }: {
   items: Section[];
   category: "food" | "drinks";
@@ -73,7 +148,7 @@ function ReorderColumn({
   onReorder: (category: "food" | "drinks", newOrder: Section[]) => void;
   onEdit: (s: Section) => void;
   onDelete: (id: string) => void;
-  onGripPointerDown: () => void;
+  onAutoScroll: () => void;
 }) {
   return items.length === 0 ? (
     <p className="py-3 text-sm text-muted-foreground">{emptyText}</p>
@@ -85,15 +160,14 @@ function ReorderColumn({
       className="space-y-0"
     >
       {items.map((s) => (
-        <Reorder.Item key={s._id} value={s} className="list-none">
-          <SectionRow
-            s={s}
-            lang={lang}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onGripPointerDown={onGripPointerDown}
-          />
-        </Reorder.Item>
+        <SortableSection
+          key={s._id}
+          s={s}
+          lang={lang}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAutoScroll={onAutoScroll}
+        />
       ))}
     </Reorder.Group>
   );
@@ -146,8 +220,8 @@ export default function SectionManager() {
       try {
         const data = await adminService.getExtras(sectionId);
         setExtras(data);
-      } catch {
-        showToast(c.errorLoad, "error");
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : c.errorLoad, "error");
       } finally {
         setLoadingExtras(false);
       }
@@ -217,8 +291,8 @@ export default function SectionManager() {
         setActiveSectionId(created._id ?? null);
         showToast(c.saved, "success");
       }
-    } catch {
-      showToast(c.errorSave, "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorSave, "error");
     } finally {
       setSavingSection(false);
     }
@@ -257,8 +331,8 @@ export default function SectionManager() {
       });
       setExtras((prev) => [...prev, created]);
       setNewExtra({ ...EMPTY_EXTRA });
-    } catch {
-      showToast(c.errorSave, "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorSave, "error");
     } finally {
       setAddingExtra(false);
     }
@@ -268,8 +342,8 @@ export default function SectionManager() {
     try {
       await adminService.deleteMenuItem(id);
       setExtras((prev) => prev.filter((e) => e._id !== id));
-    } catch {
-      showToast(c.errorDelete, "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorDelete, "error");
     } finally {
       setConfirmExtraId(null);
     }
@@ -279,8 +353,8 @@ export default function SectionManager() {
     try {
       await adminService.deleteSection(id);
       setSections((prev) => prev.filter((s) => s._id !== id));
-    } catch {
-      showToast(c.errorDelete, "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorDelete, "error");
     } finally {
       setConfirmId(null);
     }
@@ -311,7 +385,7 @@ export default function SectionManager() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-3xl admin-fade-in">
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       {/* Add button */}
@@ -331,13 +405,31 @@ export default function SectionManager() {
               <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50 mb-2">
                 {a.categoryFood}
               </p>
-              <ReorderColumn items={foodOrder} category="food" emptyText={a.empty} lang={lang} onReorder={handleReorder} onEdit={openEdit} onDelete={setConfirmId} onGripPointerDown={startAutoScroll} />
+              <ReorderColumn
+                items={foodOrder}
+                category="food"
+                emptyText={a.empty}
+                lang={lang}
+                onReorder={handleReorder}
+                onEdit={openEdit}
+                onDelete={setConfirmId}
+                onAutoScroll={startAutoScroll}
+              />
             </div>
             <div>
               <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50 mb-2">
                 {a.categoryDrinks}
               </p>
-              <ReorderColumn items={drinksOrder} category="drinks" emptyText={a.empty} lang={lang} onReorder={handleReorder} onEdit={openEdit} onDelete={setConfirmId} onGripPointerDown={startAutoScroll} />
+              <ReorderColumn
+                items={drinksOrder}
+                category="drinks"
+                emptyText={a.empty}
+                lang={lang}
+                onReorder={handleReorder}
+                onEdit={openEdit}
+                onDelete={setConfirmId}
+                onAutoScroll={startAutoScroll}
+              />
             </div>
           </div>
 
@@ -366,7 +458,7 @@ export default function SectionManager() {
               onReorder={handleReorder}
               onEdit={openEdit}
               onDelete={setConfirmId}
-              onGripPointerDown={startAutoScroll}
+              onAutoScroll={startAutoScroll}
             />
           </div>
         </>

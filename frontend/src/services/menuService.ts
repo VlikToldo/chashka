@@ -15,16 +15,9 @@ export const menuService = {
     return data;
   },
 
-  getBySection: async (sectionId: string): Promise<MenuItem[]> => {
+  getAllItems: async (): Promise<MenuItem[]> => {
     const { data } = await api.get<MenuItem[]>("/menu", {
-      params: { sectionId, isExtra: false },
-    });
-    return data;
-  },
-
-  getExtras: async (sectionId: string): Promise<MenuItem[]> => {
-    const { data } = await api.get<MenuItem[]>("/menu", {
-      params: { sectionId, isExtra: true },
+      params: { isExtra: false },
     });
     return data;
   },
@@ -32,6 +25,14 @@ export const menuService = {
   getAllExtras: async (): Promise<MenuItem[]> => {
     const { data } = await api.get<MenuItem[]>("/menu", {
       params: { isExtra: true },
+    });
+    return data;
+  },
+
+  // Kept for potential direct usage elsewhere
+  getBySection: async (sectionId: string): Promise<MenuItem[]> => {
+    const { data } = await api.get<MenuItem[]>("/menu", {
+      params: { sectionId, isExtra: false },
     });
     return data;
   },
@@ -55,6 +56,25 @@ export const coverPhotoService = {
     return {
       image: data.image ?? null,
       objectPosition: data.objectPosition ?? "{}",
+    };
+  },
+};
+
+export const splashService = {
+  getPhoto: async (): Promise<{
+    image: string | null;
+    objectPosition: string;
+    enabled: boolean;
+  }> => {
+    const { data } = await api.get<{
+      image: string | null;
+      objectPosition?: string;
+      enabled: boolean;
+    }>("/splash");
+    return {
+      image: data.image ?? null,
+      objectPosition: data.objectPosition ?? "{}",
+      enabled: data.enabled,
     };
   },
 };

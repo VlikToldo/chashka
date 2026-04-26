@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { PublicSection, MenuItem } from "../types/menu";
 import { menuService } from "../services/menuService";
 
 export function useMenuSections() {
   const [sections, setSections] = useState<PublicSection[]>([]);
+  // All regular items keyed by sectionId — no per-section requests needed
+  const [itemsMap, setItemsMap] = useState<Record<string, MenuItem[]>>({});
   const [allExtras, setAllExtras] = useState<MenuItem[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<"food" | "drinks">(
     "food",
@@ -11,17 +13,28 @@ export function useMenuSections() {
   const [activeSection, setActiveSection] = useState<PublicSection | null>(
     null,
   );
-  const [items, setItems] = useState<MenuItem[]>([]);
-  const [loadingSections, setLoadingSections] = useState(true);
-  const [loadingItems, setLoadingItems] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load sections + all extras on mount
+  // Single parallel fetch on mount — all sections + all items + all extras
   useEffect(() => {
-    Promise.all([menuService.getSections(), menuService.getAllExtras()])
-      .then(([sectionData, extrasData]) => {
+    Promise.all([
+      menuService.getSections(),
+      menuService.getAllItems(),
+      menuService.getAllExtras(),
+    ])
+      .then(([sectionData, itemsData, extrasData]) => {
         setSections(sectionData);
         setAllExtras(extrasData);
+
+        // Build lookup map: sectionId → MenuItem[]
+        const map: Record<string, MenuItem[]> = {};
+        for (const item of itemsData) {
+          if (!map[item.sectionId]) map[item.sectionId] = [];
+          map[item.sectionId].push(item);
+        }
+        setItemsMap(map);
+
         const first =
           sectionData.find((s) => s.category === "food") ??
           sectionData[0] ??
@@ -29,57 +42,44 @@ export function useMenuSections() {
         setActiveSection(first);
       })
       .catch(() => setError("error"))
-      .finally(() => setLoadingSections(false));
+      .finally(() => setLoading(false));
   }, []);
 
-  // When category changes, reset active section to first in that category
+  // When category filter changes, reset active section — no network request
   useEffect(() => {
     const first = sections.find((s) => s.category === categoryFilter) ?? null;
     setActiveSection(first);
   }, [categoryFilter, sections]);
 
-  // Load items when active section changes
-  useEffect(() => {
-    if (!activeSection) {
-      setItems([]);
-      return;
-    }
+  const filteredSections = useMemo(
+    () => sections.filter((s) => s.category === categoryFilter),
+    [sections, categoryFilter],
+  );
 
-    let cancelled = false;
-    setLoadingItems(true);
-    setError(null);
-
-    menuService
-      .getBySection(activeSection._id)
-      .then((regular) => {
-        if (!cancelled) setItems(regular);
-      })
-      .catch(() => {
-        if (!cancelled) setError("error");
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingItems(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeSection]);
-
-  const filteredSections = sections.filter(
-    (s) => s.category === categoryFilter,
+  // Items for active section — pure local lookup, zero requests
+  const items = useMemo(
+    () => (activeSection ? (itemsMap[activeSection._id] ?? []) : []),
+    [activeSection, itemsMap],
   );
 
   // Extras filtered to current category's sections
-  const filteredSectionIds = new Set(filteredSections.map((s) => s._id));
-  const categoryExtras = allExtras.filter((e) =>
-    filteredSectionIds.has(e.sectionId),
+  const filteredSectionIds = useMemo(
+    () => new Set(filteredSections.map((s) => s._id)),
+    [filteredSections],
+  );
+  const categoryExtras = useMemo(
+    () => allExtras.filter((e) => filteredSectionIds.has(e.sectionId)),
+    [allExtras, filteredSectionIds],
   );
 
   // Extras for the currently active section
-  const sectionExtras = activeSection
-    ? allExtras.filter((e) => e.sectionId === activeSection._id)
-    : [];
+  const sectionExtras = useMemo(
+    () =>
+      activeSection
+        ? allExtras.filter((e) => e.sectionId === activeSection._id)
+        : [],
+    [activeSection, allExtras],
+  );
 
   return {
     sections,
@@ -91,7 +91,7 @@ export function useMenuSections() {
     items,
     categoryExtras,
     sectionExtras,
-    loading: loadingSections || loadingItems,
+    loading,
     error,
   };
 }

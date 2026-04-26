@@ -201,8 +201,8 @@ export default function CoverPhotoManager() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       showToast(c.saved, "success");
-    } catch {
-      setError(c.errorSave);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSaving(false);
     }
@@ -217,7 +217,7 @@ export default function CoverPhotoManager() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8 max-w-2xl admin-fade-in">
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div className="space-y-4">
@@ -229,7 +229,11 @@ export default function CoverPhotoManager() {
           >
             {currentImage ? (
               <div style={getWrapperStyle(currentPosition)}>
-                <img src={getOptimizedUrl(currentImage)} alt="cover" style={imgStyle} />
+                <img
+                  src={getOptimizedUrl(currentImage)}
+                  alt="cover"
+                  style={imgStyle}
+                />
               </div>
             ) : (
               <ImageIcon size={32} className="text-muted-foreground" />
@@ -295,7 +299,12 @@ export default function CoverPhotoManager() {
               </div>
 
               <div className="flex items-center gap-2 w-full">
-                <Button variant="ghost" onClick={() => handleZoom("out")} disabled={editPos.scale <= 1} className="p-1.5">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleZoom("out")}
+                  disabled={editPos.scale <= 1}
+                  className="p-1.5"
+                >
                   <ZoomOut size={16} />
                 </Button>
                 <input
@@ -314,16 +323,29 @@ export default function CoverPhotoManager() {
                   }
                   className="flex-1 accent-foreground cursor-pointer"
                 />
-                <Button variant="ghost" onClick={() => handleZoom("in")} disabled={editPos.scale >= 4} className="p-1.5">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleZoom("in")}
+                  disabled={editPos.scale >= 4}
+                  className="p-1.5"
+                >
                   <ZoomIn size={16} />
                 </Button>
               </div>
 
               <div className="flex gap-3 w-full pt-1">
-                <Button variant="secondary" onClick={handleCancel} className="flex-1 px-4 py-2">
+                <Button
+                  variant="secondary"
+                  onClick={handleCancel}
+                  className="flex-1 px-4 py-2"
+                >
                   Скасувати
                 </Button>
-                <Button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-2 justify-center">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 justify-center"
+                >
                   <Save size={12} />
                   {saving ? "..." : saved ? "✓" : "Зберегти"}
                 </Button>

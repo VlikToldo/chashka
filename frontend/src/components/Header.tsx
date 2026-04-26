@@ -5,6 +5,7 @@ import Loader from "./ui/Loader";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { useVenue } from "../context/VenueContext";
+import { useToast } from "../context/ToastContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { coverPhotoService } from "../services/menuService";
 import {
@@ -20,9 +21,18 @@ export default function Header() {
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [logoPos, setLogoPos] = useState<PhotoPosition>(DEFAULT_POSITION);
   const [logoLoading, setLogoLoading] = useState(true);
+  const [logoVisible, setLogoVisible] = useState(false);
   const { t, lang } = useLanguage();
   const { venue } = useVenue();
+  const { showToast } = useToast();
   const location = useLocation();
+
+  const handleInstagram = (e: React.MouseEvent) => {
+    if (!venue.instagramUrl) {
+      e.preventDefault();
+      showToast(t.footer.instagramNotAdded, "info");
+    }
+  };
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -33,7 +43,10 @@ export default function Header() {
         setLogoPos(parsePosition(objectPosition));
       })
       .catch(() => setLogoSrc(null))
-      .finally(() => setLogoLoading(false));
+      .finally(() => {
+        setLogoLoading(false);
+        setTimeout(() => setLogoVisible(true), 50);
+      });
   }, []);
 
   // Close mobile menu on route change
@@ -61,7 +74,7 @@ export default function Header() {
   return (
     <header ref={headerRef} className="relative z-50">
       {/* Top bar */}
-      <div className="bg-primary/20 py-2 px-6">
+      <div className="bg-primary/30 py-2 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="hidden md:block w-16" />
           <p className="text-xs md:text-sm tracking-wide text-foreground/80 text-center flex-1 md:flex-none">
@@ -103,7 +116,13 @@ export default function Header() {
 
         {/* Logo */}
         <Link to="/" className="flex flex-col items-center mx-auto md:mx-0">
-          <div className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center relative">
+          <div
+            className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center relative"
+            style={{
+              opacity: logoVisible ? 1 : 0,
+              transition: "opacity 1.2s ease",
+            }}
+          >
             {logoLoading ? (
               <Loader size={28} className="py-0" />
             ) : logoSrc ? (
@@ -128,11 +147,12 @@ export default function Header() {
             {t.nav.contact}
           </a>
           <a
-            href="https://instagram.com/chashka.elcampello"
-            target="_blank"
+            href={venue.instagramUrl || "#"}
+            target={venue.instagramUrl ? "_blank" : undefined}
             rel="noopener noreferrer"
             className="hover:text-muted-foreground transition-colors"
             aria-label="Instagram"
+            onClick={handleInstagram}
           >
             <Instagram size={16} />
           </a>
@@ -140,11 +160,12 @@ export default function Header() {
 
         {/* Mobile: instagram */}
         <a
-          href="https://instagram.com/chashka.elcampello"
-          target="_blank"
+          href={venue.instagramUrl || "#"}
+          target={venue.instagramUrl ? "_blank" : undefined}
           rel="noopener noreferrer"
           className="md:hidden p-2 -mr-2"
           aria-label="Instagram"
+          onClick={handleInstagram}
         >
           <Instagram size={24} />
         </a>
@@ -159,7 +180,7 @@ export default function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="md:hidden absolute top-full left-0 right-0 bg-background border-b border-border shadow-sm"
+            className="md:hidden absolute top-full left-0 right-0 bg-background border-b border-primary/30 shadow-sm"
           >
             <nav className="flex flex-col items-center py-8 gap-6">
               <Link

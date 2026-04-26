@@ -25,8 +25,8 @@ const menuItemStorage = new CloudinaryStorage({
         width: 1200,
         height: 675,
         format: "auto",
-        quality: "auto"
-      }
+        quality: "auto",
+      },
     ],
   },
 });
@@ -37,7 +37,8 @@ export const uploadMenuItemImage = multer({
   limits: commonLimits,
 });
 
-// 2. Фото блоку "Про нас" (широкий landscape ~3:1, 1200×400px)
+// 2. Фото блоку "Про нас" — зберігаємо оригінальне співвідношення сторін,
+//    позиціонування/обрізання робить frontend через систему photoPosition
 const aboutBlockStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -45,13 +46,11 @@ const aboutBlockStorage = new CloudinaryStorage({
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
     transformation: [
       {
-        crop: "fill",
-        gravity: "center",
-        width: 1200,
-        height: 400,
+        width: 1600,
+        crop: "limit", // лише зменшує якщо більше 1600px, не змінює AR
         format: "auto",
-        quality: "auto"
-      }
+        quality: "auto",
+      },
     ],
   },
 });
@@ -75,8 +74,8 @@ const coverPhotoStorage = new CloudinaryStorage({
         width: 600,
         height: 600,
         format: "auto",
-        quality: "auto"
-      }
+        quality: "auto",
+      },
     ],
   },
 });
@@ -85,6 +84,31 @@ export const uploadCoverPhoto = multer({
   storage: coverPhotoStorage,
   fileFilter: commonFileFilter,
   limits: commonLimits,
+});
+
+// 4. Splash-фото (9:16 портрет, 1080×1920px)
+const splashPhotoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "chashka/splash",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [
+      {
+        crop: "fill",
+        gravity: "center",
+        width: 1080,
+        height: 1920,
+        format: "auto",
+        quality: "auto",
+      },
+    ],
+  },
+});
+
+export const uploadSplashPhoto = multer({
+  storage: splashPhotoStorage,
+  fileFilter: commonFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB — portrait може важити більше
 });
 
 // Для зворотної сумісності (deprecated)

@@ -72,7 +72,7 @@ export const updateMenuItemSchema = z.object({
 
 // About
 export const createAboutSchema = z.object({
-  title: multilingualString(true),
+  title: multilingualString(false),
   text: multilingualString(true),
   order: z.number().optional(),
 });
@@ -99,9 +99,20 @@ export const updateWorkingHoursSchema = z.object({
 export const updateVenueSchema = z.object({
   address: multilingualString(false),
   phone: z.string().optional(),
+  mapEmbedUrl: z.string().optional(),
+  instagramUrl: z.string().optional(),
 });
 
 // Cover Photo
 export const updateCoverPhotoPositionSchema = z.object({
   objectPosition: z.string().min(1).max(100), // e.g. "center center", "50% 50%", "left top"
+});
+
+// Forgot / Reset password
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  newPassword: z.string().min(6),
 });

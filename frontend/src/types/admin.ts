@@ -9,6 +9,7 @@ export interface AdminUser {
 export interface AdminProfile {
   _id: string;
   email: string;
+  pendingEmail?: string;
   firstName: string;
   lastName: string;
   emailVerified: boolean;

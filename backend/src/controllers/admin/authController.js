@@ -96,6 +96,11 @@ export async function verifyEmail(req, res) {
       .status(400)
       .json({ error: "Invalid or expired verification link" });
 
+  // If this was an email change verification, promote pendingEmail → email
+  if (user.pendingEmail) {
+    user.email = user.pendingEmail;
+    user.pendingEmail = null;
+  }
   user.emailVerified = true;
   user.emailVerificationToken = null;
   user.emailVerificationExpires = null;

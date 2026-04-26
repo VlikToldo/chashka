@@ -1,4 +1,5 @@
-import { X } from "lucide-react"
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
 interface Props {
   title: string
@@ -13,7 +14,7 @@ export default function AdminModal({
   children,
   maxWidth = "max-w-xl",
 }: Props) {
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 backdrop-blur-sm p-4 overflow-y-auto"
       onClick={onClose}
@@ -34,6 +35,7 @@ export default function AdminModal({
         </div>
         {children}
       </div>
-    </div>
-  )
+    </div>,
+    document.body
+  );
 }

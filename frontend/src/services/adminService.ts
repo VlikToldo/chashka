@@ -122,6 +122,11 @@ export const adminService = {
     return data;
   },
 
+  duplicateMenuItem: async (id: string): Promise<AdminMenuItem> => {
+    const { data } = await api.post(`/menu-items/${id}/duplicate`);
+    return data;
+  },
+
   deleteMenuItem: async (id: string): Promise<void> => {
     await api.delete(`/menu-items/${id}`);
   },
@@ -239,6 +244,15 @@ export const adminService = {
     patch: Partial<Pick<AdminProfile, "email" | "firstName" | "lastName">>,
   ): Promise<AdminProfile> => {
     const { data } = await api.put("/profile", patch);
+    return data;
+  },
+
+  resendEmailChange: async (): Promise<void> => {
+    await api.post("/email-change/resend");
+  },
+
+  cancelEmailChange: async (): Promise<AdminProfile> => {
+    const { data } = await api.delete("/email-change");
     return data;
   },
 

@@ -107,6 +107,23 @@ export async function reorderMenuItems(req, res) {
   res.json({ success: true });
 }
 
+export async function duplicateMenuItem(req, res) {
+  const original = await MenuItem.findById(req.params.id);
+  if (!original) return res.status(404).json({ error: "Not found" });
+  const copy = await MenuItem.create({
+    sectionId: original.sectionId,
+    name: original.name,
+    price: original.price,
+    ingredients: original.ingredients,
+    allergens: original.allergens,
+    yield: original.yield,
+    image: original.image,
+    isExtra: original.isExtra,
+    order: original.order,
+  });
+  res.status(201).json(copy);
+}
+
 export async function uploadMenuItemImage(req, res) {
   if (!req.file) return res.status(400).json({ error: "No image provided" });
   const imageUrl = req.file.path; // Cloudinary URL

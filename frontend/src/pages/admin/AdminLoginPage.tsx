@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { adminService } from "../../services/adminService";
 import { useAuth } from "../../context/AuthContext";
+import PasswordInput from "../../components/ui/PasswordInput";
 
 export default function AdminLoginPage() {
   const { login } = useAuth();
@@ -12,8 +13,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const successMessage = (location.state as { message?: string } | null)
-    ?.message;
+  const successMessage = (location.state as { message?: string } | null)?.message;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +64,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
               placeholder="admin@example.com"
+              autoComplete="email"
             />
           </div>
 
@@ -79,13 +80,11 @@ export default function AdminLoginPage() {
                 Забули пароль?
               </Link>
             </div>
-            <input
-              type="password"
-              required
+            <PasswordInput
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
-              placeholder="••••••••"
+              onChange={setPassword}
+              required
+              autoComplete="current-password"
             />
           </div>
 

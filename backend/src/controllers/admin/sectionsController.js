@@ -1,4 +1,5 @@
 import Section from "../../models/Section.js";
+import MenuItem from "../../models/MenuItem.js";
 import { translateToAllLanguages } from "../../services/translationService.js";
 
 export async function getSections(_req, res) {
@@ -31,6 +32,12 @@ export async function updateSection(req, res) {
 }
 
 export async function deleteSection(req, res) {
+  const itemCount = await MenuItem.countDocuments({ sectionId: req.params.id });
+  if (itemCount > 0) {
+    return res.status(409).json({
+      message: `Не можна видалити розділ — у ньому є ${itemCount} ${itemCount === 1 ? "позиція" : "позицій"}. Спочатку видаліть або перенесіть усі позиції.`,
+    });
+  }
   const section = await Section.findByIdAndDelete(req.params.id);
   if (!section) return res.status(404).json({ error: "Not found" });
   res.json({ success: true });

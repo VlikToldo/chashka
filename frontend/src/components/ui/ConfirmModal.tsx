@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "./Button";
 
@@ -24,7 +25,7 @@ export default function ConfirmModal({
   danger = true,
   zIndex = "z-50",
 }: Props) {
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -75,6 +76,7 @@ export default function ConfirmModal({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

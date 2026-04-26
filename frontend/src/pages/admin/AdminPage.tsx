@@ -6,14 +6,34 @@ import { useLanguage } from "../../context/LanguageContext";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import Loader from "../../components/ui/Loader";
 
-const ProfileManager = lazy(() => import("../../components/admin/ProfileManager"));
-const SectionManager = lazy(() => import("../../components/admin/SectionManager"));
-const MenuItemManager = lazy(() => import("../../components/admin/MenuItemManager"));
-const WorkingHoursManager = lazy(() => import("../../components/admin/WorkingHoursManager"));
-const CoverPhotoManager = lazy(() => import("../../components/admin/CoverPhotoManager"));
+const ProfileManager = lazy(
+  () => import("../../components/admin/ProfileManager"),
+);
+const SectionManager = lazy(
+  () => import("../../components/admin/SectionManager"),
+);
+const MenuItemManager = lazy(
+  () => import("../../components/admin/MenuItemManager"),
+);
+const WorkingHoursManager = lazy(
+  () => import("../../components/admin/WorkingHoursManager"),
+);
+const CoverPhotoManager = lazy(
+  () => import("../../components/admin/CoverPhotoManager"),
+);
 const AboutManager = lazy(() => import("../../components/admin/AboutManager"));
+const SplashPhotoManager = lazy(
+  () => import("../../components/admin/SplashPhotoManager"),
+);
 
-type Tab = "profile" | "sections" | "menu" | "hours" | "cover" | "about";
+type Tab =
+  | "profile"
+  | "sections"
+  | "menu"
+  | "hours"
+  | "cover"
+  | "about"
+  | "splash";
 
 export default function AdminPage() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -22,12 +42,13 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "profile",  label: a.tabs.profile },
+    { id: "profile", label: a.tabs.profile },
     { id: "sections", label: a.tabs.sections },
-    { id: "menu",     label: a.tabs.menu },
-    { id: "hours",    label: a.tabs.hours },
-    { id: "cover",    label: a.tabs.cover },
-    { id: "about",    label: a.tabs.about },
+    { id: "menu", label: a.tabs.menu },
+    { id: "hours", label: a.tabs.hours },
+    { id: "cover", label: a.tabs.cover },
+    { id: "splash", label: a.tabs.splash },
+    { id: "about", label: a.tabs.about },
   ];
 
   return (
@@ -92,14 +113,16 @@ export default function AdminPage() {
 
         {/* Tab content */}
         <Suspense fallback={<Loader />}>
-          <div>
+          <div key={activeTab} className="admin-fade-in">
             {activeTab === "profile" && (
               <section>
                 <div className="mb-6">
                   <h2 className="text-xl font-light tracking-wide mb-1">
                     {a.profile.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{a.profile.desc}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {a.profile.desc}
+                  </p>
                 </div>
                 <ProfileManager />
               </section>
@@ -111,7 +134,9 @@ export default function AdminPage() {
                   <h2 className="text-xl font-light tracking-wide mb-1">
                     {a.sections.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{a.sections.desc}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {a.sections.desc}
+                  </p>
                 </div>
                 <SectionManager />
               </section>
@@ -135,7 +160,9 @@ export default function AdminPage() {
                   <h2 className="text-xl font-light tracking-wide mb-1">
                     {a.hours.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{a.hours.desc}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {a.hours.desc}
+                  </p>
                 </div>
                 <WorkingHoursManager />
               </section>
@@ -147,9 +174,25 @@ export default function AdminPage() {
                   <h2 className="text-xl font-light tracking-wide mb-1">
                     {a.cover.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{a.cover.desc}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {a.cover.desc}
+                  </p>
                 </div>
                 <CoverPhotoManager />
+              </section>
+            )}
+
+            {activeTab === "splash" && (
+              <section>
+                <div className="mb-6">
+                  <h2 className="text-xl font-light tracking-wide mb-1">
+                    {a.splash.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {a.splash.desc}
+                  </p>
+                </div>
+                <SplashPhotoManager />
               </section>
             )}
 
@@ -159,7 +202,9 @@ export default function AdminPage() {
                   <h2 className="text-xl font-light tracking-wide mb-1">
                     {a.about.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{a.about.desc}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {a.about.desc}
+                  </p>
                 </div>
                 <AboutManager />
               </section>

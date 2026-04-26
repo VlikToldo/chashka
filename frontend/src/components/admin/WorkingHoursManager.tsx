@@ -44,8 +44,12 @@ export default function WorkingHoursManager() {
   const [venue, setVenue] = useState<VenueInfo>({
     address: { uk: "", en: "", es: "" },
     phone: "",
+    mapEmbedUrl: "",
+    instagramUrl: "",
   });
   const [addressInput, setAddressInput] = useState("");
+  const [mapEmbedInput, setMapEmbedInput] = useState("");
+  const [instagramInput, setInstagramInput] = useState("");
   const [savingVenue, setSavingVenue] = useState(false);
   const [savedVenue, setSavedVenue] = useState(false);
   const [venueError, setVenueError] = useState<string | null>(null);
@@ -72,37 +76,40 @@ export default function WorkingHoursManager() {
               venResult.value.address.es ||
               "",
           );
+          setMapEmbedInput(venResult.value.mapEmbedUrl ?? "");
+          setInstagramInput(venResult.value.instagramUrl ?? "");
         }
-        if (
-          hoursResult.status === "fulfilled" &&
-          hoursResult.value.slots.length > 0
-        ) {
+        if (hoursResult.status === "fulfilled") {
           setSlots(hoursResult.value.slots);
         }
       })
       .finally(() => setLoading(false));
   }, []);
 
+  // Extract src URL from a raw <iframe> string or use as-is if it's already a URL
+  const extractMapSrc = (raw: string): string => {
+    const match = raw.match(/src="([^"]+)"/);
+    return match ? match[1] : raw.trim();
+  };
+
   const handleSaveVenue = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addressInput.trim()) {
-      setVenueError(c.errorSave);
-      return;
-    }
     setSavingVenue(true);
     setVenueError(null);
     try {
       const updated = await adminService.updateVenue({
         address: addressInput,
         phone: venue.phone,
+        mapEmbedUrl: mapEmbedInput.trim() ? extractMapSrc(mapEmbedInput) : "",
+        instagramUrl: instagramInput.trim(),
       });
       setVenue(updated);
       refreshVenue();
       setSavedVenue(true);
       setTimeout(() => setSavedVenue(false), 2500);
       showToast(c.saved, "success");
-    } catch {
-      setVenueError(c.errorSave);
+    } catch (err) {
+      setVenueError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSavingVenue(false);
     }
@@ -141,8 +148,8 @@ export default function WorkingHoursManager() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       showToast(c.saved, "success");
-    } catch {
-      setError(c.errorSave);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSaving(false);
     }
@@ -151,7 +158,7 @@ export default function WorkingHoursManager() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-12 max-w-2xl">
+    <div className="space-y-12 max-w-2xl admin-fade-in">
       {/* Venue section */}
       <form onSubmit={handleSaveVenue} className="space-y-4">
         <SectionTitle>{a.venueTitle}</SectionTitle>
@@ -173,6 +180,43 @@ export default function WorkingHoursManager() {
             className={inputClass}
             placeholder="+34 600 000 000"
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClass}>{a.instagram}</label>
+          <input
+            value={instagramInput}
+            onChange={(e) => setInstagramInput(e.target.value)}
+            className={inputClass}
+            placeholder="https://instagram.com/chashka.elcampello"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClass}>{a.mapEmbed}</label>
+          <p className="text-xs text-muted-foreground/70 mb-1">{a.mapEmbedHint}</p>
+          <textarea
+            value={mapEmbedInput}
+            onChange={(e) => setMapEmbedInput(e.target.value)}
+            rows={3}
+            className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-xs outline-none focus:border-foreground transition-colors resize-none font-mono"
+            placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." ...></iframe>'
+          />
+          {extractMapSrc(mapEmbedInput) && (
+            <div className="mt-2 rounded-xl overflow-hidden border border-border/30 shadow-sm">
+              <iframe
+                key={extractMapSrc(mapEmbedInput)}
+                title="Map preview"
+                src={extractMapSrc(mapEmbedInput)}
+                width="100%"
+                height="200"
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                className="block"
+              />
+            </div>
+          )}
         </div>
 
         {venueError && <p className="text-sm text-red-500">{venueError}</p>}

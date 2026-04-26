@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Reorder } from "framer-motion";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
+import { useLongPressDrag } from "../../hooks/useLongPressDrag";
 import { Plus, Pencil, Trash2, ImageIcon, GripVertical } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
@@ -14,9 +15,95 @@ import ConfirmModal from "../ui/ConfirmModal";
 import CustomSelect from "../ui/CustomSelect";
 import type { AdminMenuItem, Section } from "../../types/admin";
 import type { LocalizedString } from "../../types/menu";
+import type { Lang } from "../../i18n/translations";
 import { getOptimizedUrl } from "../../utils/imageUrl";
 
 const EMPTY_L: LocalizedString = { uk: "", en: "", es: "" };
+
+function SortableMenuItem({
+  item,
+  lang,
+  onEdit,
+  onDelete,
+  onAutoScroll,
+}: {
+  item: AdminMenuItem;
+  lang: Lang;
+  onEdit: (item: AdminMenuItem) => void;
+  onDelete: (id: string) => void;
+  onAutoScroll: () => void;
+}) {
+  const { controls, onPointerDown, pressing } = useLongPressDrag(500);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onPointerDown(e);
+      onAutoScroll();
+    },
+    [onPointerDown, onAutoScroll],
+  );
+
+  useEffect(() => {
+    if (isDragging) {
+      document.body.style.cursor = "grabbing";
+    } else {
+      document.body.style.cursor = "";
+    }
+    return () => { document.body.style.cursor = ""; };
+  }, [isDragging]);
+
+  return (
+    <Reorder.Item
+      value={item}
+      className="list-none"
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => setIsDragging(false)}
+    >
+      <div
+        className={`flex items-center gap-3 py-3 select-none transition-shadow duration-150
+          ${isDragging ? "rounded-sm shadow-md ring-1 ring-foreground/10 bg-background cursor-grabbing" : ""}
+          ${pressing && !isDragging ? "cursor-grab" : ""}
+        `}
+        onPointerDown={handlePointerDown}
+      >
+        <GripVertical
+          size={14}
+          className={`shrink-0 transition-colors duration-200 ${
+            pressing || isDragging ? "text-foreground animate-pulse" : "text-muted-foreground/40"
+          }`}
+        />
+        {item.image ? (
+          <img
+            src={getOptimizedUrl(item.image)}
+            alt={localize(item.name, lang)}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <ImageIcon size={14} className="text-muted-foreground" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm truncate">{localize(item.name, lang)}</p>
+          <p className="text-xs text-muted-foreground">{item.price}</p>
+        </div>
+        <Button variant="ghost" onClick={() => onEdit(item)} className="p-1">
+          <Pencil size={14} />
+        </Button>
+        <Button
+          variant="ghost-danger"
+          onClick={() => item._id && onDelete(item._id)}
+          className="p-1"
+        >
+          <Trash2 size={14} />
+        </Button>
+      </div>
+    </Reorder.Item>
+  );
+}
 
 const EMPTY_FORM: Omit<AdminMenuItem, "_id"> = {
   sectionId: "",
@@ -200,8 +287,8 @@ export default function MenuItemManager() {
       }
       showToast(c.saved, "success");
       setShowForm(false);
-    } catch {
-      setError(c.errorSave);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSaving(false);
     }
@@ -211,8 +298,8 @@ export default function MenuItemManager() {
     try {
       await adminService.deleteMenuItem(id);
       rebuildGrouped(items.filter((i) => i._id !== id));
-    } catch {
-      setError(c.errorDelete);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : c.errorDelete);
     } finally {
       setConfirmId(null);
     }
@@ -268,7 +355,9 @@ export default function MenuItemManager() {
   const renderSectionColumn = (cols: Section[]) => (
     <div className="space-y-8">
       {cols.map((section) => {
-        const sectionItems = (itemsBySection[section._id!] ?? []).filter(matchesSearch);
+        const sectionItems = (itemsBySection[section._id!] ?? []).filter(
+          matchesSearch,
+        );
         if (sectionItems.length === 0 && q) return null;
         return (
           <div key={section._id}>
@@ -281,44 +370,20 @@ export default function MenuItemManager() {
               <Reorder.Group
                 axis="y"
                 values={sectionItems}
-                onReorder={(newOrder) => handleReorderSection(section._id!, newOrder)}
+                onReorder={(newOrder) =>
+                  handleReorderSection(section._id!, newOrder)
+                }
                 className="divide-y divide-border/50"
               >
                 {sectionItems.map((item) => (
-                  <Reorder.Item key={item._id} value={item} className="list-none">
-                    <div className="flex items-center gap-3 py-3">
-                      <GripVertical
-                        size={14}
-                        className="text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing"
-                        onPointerDown={startAutoScroll}
-                      />
-                      {item.image ? (
-                        <img
-                          src={getOptimizedUrl(item.image)}
-                          alt={localize(item.name, lang)}
-                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                          <ImageIcon size={14} className="text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{localize(item.name, lang)}</p>
-                        <p className="text-xs text-muted-foreground">{item.price}</p>
-                      </div>
-                      <Button variant="ghost" onClick={() => openEdit(item)} className="p-1">
-                        <Pencil size={14} />
-                      </Button>
-                      <Button
-                        variant="ghost-danger"
-                        onClick={() => item._id && setConfirmId(item._id)}
-                        className="p-1"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </Reorder.Item>
+                  <SortableMenuItem
+                    key={item._id}
+                    item={item}
+                    lang={lang}
+                    onEdit={openEdit}
+                    onDelete={setConfirmId}
+                    onAutoScroll={startAutoScroll}
+                  />
                 ))}
               </Reorder.Group>
             )}
@@ -329,7 +394,7 @@ export default function MenuItemManager() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 admin-fade-in">
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       {!showForm ? (

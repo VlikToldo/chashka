@@ -11,12 +11,28 @@ import { localize } from "../utils/localize";
 import { useSeoMeta } from "../hooks/useSeoMeta";
 import type { MenuItem } from "../types/menu";
 
-const ExtraRow = memo(function ExtraRow({ item }: { item: MenuItem }) {
+const ExtraRow = memo(function ExtraRow({
+  item,
+  index = 0,
+}: {
+  item: MenuItem;
+  index?: number;
+}) {
   const { lang } = useLanguage();
   const name = localize(item.name, lang);
   const yieldVal = localize(item.yield, lang);
   return (
-    <div className="flex items-center justify-between gap-4 py-4 border-b border-border/50 last:border-b-0">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{
+        duration: 0.4,
+        ease: "easeOut",
+        delay: Math.min(index * 0.04, 0.3),
+      }}
+      className="flex items-center justify-between gap-4 py-4 border-b border-border/50 last:border-b-0"
+    >
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-base font-light">{name}</span>
         {yieldVal && (
@@ -28,7 +44,7 @@ const ExtraRow = memo(function ExtraRow({ item }: { item: MenuItem }) {
       <span className="text-base font-light tabular-nums shrink-0">
         {item.price}
       </span>
-    </div>
+    </motion.div>
   );
 });
 
@@ -94,7 +110,12 @@ export default function MenuPage() {
       </section>
 
       {/* Food / Drinks toggle */}
-      <div className="flex justify-center gap-0 border-b border-border">
+      <motion.div
+        className="flex justify-center gap-0 border-b border-border"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         {(["food", "drinks"] as const).map((cat) => (
           <button
             key={cat}
@@ -108,16 +129,23 @@ export default function MenuPage() {
             {cat === "food" ? t.menu.food : t.menu.drinks}
           </button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Section nav */}
       {filteredSections.length > 0 && (
-        <nav className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <nav aria-label="Menu sections" className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex justify-center gap-1 md:gap-8 py-4 overflow-x-auto">
-              {filteredSections.map((section) => (
-                <button
+              {filteredSections.map((section, i) => (
+                <motion.button
                   key={section._id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    ease: "easeOut",
+                    delay: i * 0.06,
+                  }}
                   onClick={() => {
                     setActiveSection(section);
                     setExtrasActive(false);
@@ -129,10 +157,17 @@ export default function MenuPage() {
                   }`}
                 >
                   {localize(section.name, lang)}
-                </button>
+                </motion.button>
               ))}
               {categoryExtras.length > 0 && (
-                <button
+                <motion.button
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    ease: "easeOut",
+                    delay: filteredSections.length * 0.06,
+                  }}
                   onClick={() => setExtrasActive(true)}
                   className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
                     extrasActive
@@ -141,7 +176,7 @@ export default function MenuPage() {
                   }`}
                 >
                   {t.menu.extrasTab}
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
@@ -168,8 +203,14 @@ export default function MenuPage() {
                 {t.menu.extrasTab}
               </h2>
               <div className="max-w-3xl mx-auto">
-                {categoryExtras.map((item) => (
-                  <ExtraRow key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en} item={item} />
+                {categoryExtras.map((item, i) => (
+                  <ExtraRow
+                    key={
+                      item._id ?? item.name.es ?? item.name.uk ?? item.name.en
+                    }
+                    item={item}
+                    index={i}
+                  />
                 ))}
               </div>
             </motion.div>

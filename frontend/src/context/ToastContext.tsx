@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 
-type ToastType = "success" | "error" | "warning";
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
   id: number;
@@ -49,7 +49,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 ? "bg-red-600 text-white"
                 : toast.type === "warning"
                   ? "bg-amber-500 text-white"
-                  : "bg-foreground text-background"
+                  : toast.type === "info"
+                    ? "bg-blue-500 text-white"
+                    : "bg-foreground text-background"
             }`}
           >
             <span className="flex-1 leading-snug">{toast.message}</span>

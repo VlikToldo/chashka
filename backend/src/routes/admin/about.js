@@ -7,6 +7,7 @@ import {
   deleteAbout,
   reorderAbout,
   uploadAboutImage as uploadImage,
+  updateAboutImages,
 } from "../../controllers/admin/aboutController.js";
 import { validate } from "../../middleware/validate.js";
 import { createAboutSchema, updateAboutSchema } from "../../schemas/index.js";
@@ -18,4 +19,5 @@ router.put("/reorder", reorderAbout);
 router.put("/:id", validate(updateAboutSchema), updateAbout);
 router.delete("/:id", deleteAbout);
 router.post("/:id/image", uploadAboutImage.single("image"), uploadImage);
+router.put("/:id/images", updateAboutImages);
 export default router;

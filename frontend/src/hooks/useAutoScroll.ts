@@ -35,6 +35,7 @@ export function useAutoScroll() {
 
   const startAutoScroll = useCallback(() => {
     if (active.current) return;
+    pointerY.current = window.innerHeight / 2; // safe default — not in edge zone
     active.current = true;
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", stop, { once: true });

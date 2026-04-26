@@ -12,6 +12,7 @@ import aboutPublicRouter from "./routes/public/about.js";
 import coverPhotoPublicRouter from "./routes/public/coverPhoto.js";
 import venuePublicRouter from "./routes/public/venue.js";
 import workingHoursPublicRouter from "./routes/public/workingHours.js";
+import splashPhotoPublicRouter from "./routes/public/splashPhoto.js";
 
 import authAdminRouter from "./routes/admin/auth.js";
 import profileAdminRouter from "./routes/admin/profile.js";
@@ -21,6 +22,7 @@ import workingHoursAdminRouter from "./routes/admin/workingHours.js";
 import coverPhotoAdminRouter from "./routes/admin/coverPhoto.js";
 import aboutAdminRouter from "./routes/admin/about.js";
 import venueAdminRouter from "./routes/admin/venue.js";
+import splashPhotoAdminRouter from "./routes/admin/splashPhoto.js";
 
 import { authenticateAdmin } from "./middleware/authenticateAdmin.js";
 
@@ -41,23 +43,27 @@ if (!process.env.DEEPL_API_KEY) {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN ?? "*",
-}));
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGIN ?? "*",
+  }),
+);
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // Public routes
+app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/sections", sectionsPublicRouter);
 app.use("/api/menu", menuPublicRouter);
 app.use("/api/about", aboutPublicRouter);
 app.use("/api/cover-photo", coverPhotoPublicRouter);
 app.use("/api/venue", venuePublicRouter);
 app.use("/api/working-hours", workingHoursPublicRouter);
+app.use("/api/splash", splashPhotoPublicRouter);
 
 // Admin auth (no middleware)
 app.use("/api/admin", authAdminRouter);
@@ -70,6 +76,19 @@ app.use("/api/admin/working-hours", authenticateAdmin, workingHoursAdminRouter);
 app.use("/api/admin/cover-photo", authenticateAdmin, coverPhotoAdminRouter);
 app.use("/api/admin/about", authenticateAdmin, aboutAdminRouter);
 app.use("/api/admin/venue", authenticateAdmin, venueAdminRouter);
+app.use("/api/admin/splash", authenticateAdmin, splashPhotoAdminRouter);
+
+// ── Centralized error handler ─────────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  const status = err.status ?? err.statusCode ?? 500;
+  const message = err.message ?? "Internal Server Error";
+  if (status >= 500) {
+    console.error("[error]", err);
+  }
+  res.status(status).json({ message });
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 mongoose
   .connect(MONGODB_URI)

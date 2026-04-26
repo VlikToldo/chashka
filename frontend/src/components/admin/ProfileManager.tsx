@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Check } from "lucide-react";
-import axios from "axios";
+import { Save, Check, Mail, ShieldCheck } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -24,8 +23,13 @@ export default function ProfileManager() {
     email: "",
     firstName: "",
     lastName: "",
+    emailVerified: false,
   });
   const [loading, setLoading] = useState(true);
+
+  // Resend verification
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   // Password state
   const [pwForm, setPwForm] = useState({
@@ -50,6 +54,19 @@ export default function ProfileManager() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      await adminService.resendVerification();
+      setResent(true);
+      setTimeout(() => setResent(false), 4000);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorSave, "error");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile.email.trim()) {
@@ -68,8 +85,8 @@ export default function ProfileManager() {
       setSavedProfile(true);
       setTimeout(() => setSavedProfile(false), 2500);
       showToast(c.saved, "success");
-    } catch {
-      setProfileError(c.errorSave);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSavingProfile(false);
     }
@@ -77,7 +94,11 @@ export default function ProfileManager() {
 
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pwForm.currentPassword.trim() || !pwForm.newPassword.trim() || !pwForm.confirmPassword.trim()) {
+    if (
+      !pwForm.currentPassword.trim() ||
+      !pwForm.newPassword.trim() ||
+      !pwForm.confirmPassword.trim()
+    ) {
       setPwError(c.errorSave);
       return;
     }
@@ -97,11 +118,7 @@ export default function ProfileManager() {
       setTimeout(() => setSavedPw(false), 2500);
       showToast(c.saved, "success");
     } catch (err) {
-      const msg =
-        axios.isAxiosError(err) && err.response?.data?.error
-          ? err.response.data.error
-          : c.errorSave;
-      setPwError(msg);
+      setPwError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSavingPw(false);
     }
@@ -110,7 +127,31 @@ export default function ProfileManager() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-12 max-w-2xl">
+    <div className="space-y-12 max-w-2xl admin-fade-in">
+      {/* Email verification banner */}
+      {!profile.emailVerified && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded px-4 py-3 text-sm">
+          <Mail size={16} className="text-amber-500 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-amber-800">{p.emailNotVerifiedBanner}</p>
+          </div>
+          <button
+            onClick={handleResendVerification}
+            disabled={resending || resent}
+            className="text-xs underline text-amber-700 hover:text-amber-900 transition-colors disabled:opacity-50 whitespace-nowrap"
+          >
+            {resent ? p.resent : resending ? "..." : p.resendVerification}
+          </button>
+        </div>
+      )}
+
+      {profile.emailVerified && (
+        <div className="flex items-center gap-2 text-sm text-green-700">
+          <ShieldCheck size={15} />
+          <span>{p.emailVerifiedStatus}</span>
+        </div>
+      )}
+
       {/* Personal info */}
       <form onSubmit={handleSaveProfile} className="space-y-4">
         <SectionTitle>{p.personalTitle}</SectionTitle>
@@ -212,7 +253,6 @@ export default function ProfileManager() {
           {savingPw ? c.saving : savedPw ? c.saved : c.save}
         </Button>
       </form>
-
     </div>
   );
 }

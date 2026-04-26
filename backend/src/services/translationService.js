@@ -5,46 +5,46 @@ const DEEPL_TARGET = { uk: "UK", en: "EN-US", es: "ES" };
 // Словник для заміни проблемних слів перед перекладом
 const GEOGRAPHIC_FIXES = {
   // Країни в різних мовах → нейтральний англійський варіант
-  "Испания": "Spain",
-  "Іспанія": "Spain",
-  "España": "Spain",
-  "Украина": "Ukraine",
-  "Україна": "Ukraine",
-  "Ucrania": "Ukraine",
+  Испания: "Spain",
+  Іспанія: "Spain",
+  España: "Spain",
+  Украина: "Ukraine",
+  Україна: "Ukraine",
+  Ucrania: "Ukraine",
   // Міста
-  "Валенсія": "Valencia",
-  "Валенсия": "Valencia",
+  Валенсія: "Valencia",
+  Валенсия: "Valencia",
   // Можна додавати інші проблемні географічні назви
 };
 
 // Словник для постобробки результатів
 const POST_PROCESS_FIXES = {
   uk: {
-    "Spain": "Іспанія",
-    "Испания": "Іспанія",
-    "España": "Іспанія",
-    "Ukraine": "Україна",
-    "Valencia": "Валенсія",
+    Spain: "Іспанія",
+    Испания: "Іспанія",
+    España: "Іспанія",
+    Ukraine: "Україна",
+    Valencia: "Валенсія",
   },
   en: {
-    "Испания": "Spain",
-    "Україна": "Ukraine",
-    "Іспанія": "Spain",
-    "España": "Spain",
+    Испания: "Spain",
+    Україна: "Ukraine",
+    Іспанія: "Spain",
+    España: "Spain",
   },
   es: {
-    "Spain": "España",
-    "Испания": "España",
-    "Іспанія": "España",
-    "Ukraine": "Ucrania",
-  }
+    Spain: "España",
+    Испания: "España",
+    Іспанія: "España",
+    Ukraine: "Ucrania",
+  },
 };
 
 function preprocessText(text) {
   let processed = text;
   // Заміна географічних назв на нейтральні англійські
   for (const [original, neutral] of Object.entries(GEOGRAPHIC_FIXES)) {
-    processed = processed.replace(new RegExp(original, 'gi'), neutral);
+    processed = processed.replace(new RegExp(original, "gi"), neutral);
   }
   return processed;
 }
@@ -54,7 +54,7 @@ function postProcessText(text, targetLang) {
   const fixes = POST_PROCESS_FIXES[targetLang] || {};
 
   for (const [original, fixed] of Object.entries(fixes)) {
-    processed = processed.replace(new RegExp(original, 'gi'), fixed);
+    processed = processed.replace(new RegExp(original, "gi"), fixed);
   }
   return processed;
 }
@@ -64,9 +64,9 @@ async function translateText(text, targetLang) {
   if (!text) return "";
   if (!apiKey) {
     console.warn(
-      `[translationService] DEEPL_API_KEY not set — skipping translation to ${targetLang}, returning source text`,
+      `[translationService] DEEPL_API_KEY not set — skipping translation to ${targetLang}`,
     );
-    return text;
+    return "";
   }
 
   // Попередня обробка тексту
@@ -93,15 +93,15 @@ async function translateText(text, targetLang) {
   const translated = data.translations[0].text;
 
   // Постобробка результату
-  return postProcessText(translated, targetLang.toLowerCase().split('-')[0]);
+  return postProcessText(translated, targetLang.toLowerCase().split("-")[0]);
 }
 
 function containsMixedLanguages(text) {
   // Перевіряє чи містить текст змішані мови (латиниця + кирилиця + географічні назви)
   const hasLatin = /[a-zA-Z]/.test(text);
   const hasCyrillic = /[а-яё]/i.test(text);
-  const hasProblematicTerms = Object.keys(GEOGRAPHIC_FIXES).some(term =>
-    text.toLowerCase().includes(term.toLowerCase())
+  const hasProblematicTerms = Object.keys(GEOGRAPHIC_FIXES).some((term) =>
+    text.toLowerCase().includes(term.toLowerCase()),
   );
 
   return (hasLatin && hasCyrillic) || hasProblematicTerms;
@@ -121,9 +121,7 @@ export async function translateToAllLanguages(input) {
   if (!input) return { uk: "", en: "", es: "" };
 
   // Normalize to object
-  const existing = typeof input === "string"
-    ? { uk: input }
-    : { ...input };
+  const existing = typeof input === "string" ? { uk: input } : { ...input };
 
   // If all 3 languages are already provided — skip translation entirely
   if (SUPPORTED_LANGS.every((lang) => existing[lang])) {

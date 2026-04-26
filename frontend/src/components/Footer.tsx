@@ -1,55 +1,38 @@
-import { Instagram, MapPin, Clock, Heart, Phone } from 'lucide-react'
-import { useLanguage } from '../context/LanguageContext'
-import { useVenue } from '../context/VenueContext'
-import { formatSlots } from '../utils/formatSchedule'
-import type { DayKey } from '../types/admin'
+import { Instagram, MapPin, Clock, Heart, Phone } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import { useVenue } from "../context/VenueContext";
+import { formatSlots } from "../utils/formatSchedule";
+import type { DayKey } from "../types/admin";
 
 export default function Footer() {
-  const { t, lang } = useLanguage()
-  const { venue, slots } = useVenue()
-  const address = venue.address[lang]
-  const schedule = slots.length > 0
-    ? formatSlots(slots, t.admin.days as Record<DayKey, string>)
-    : t.footer.schedule as string[]
+  const { t, lang } = useLanguage();
+  const { venue, slots } = useVenue();
+  const address = venue.address[lang];
+  const schedule =
+    slots.length > 0
+      ? formatSlots(slots, t.admin.days as Record<DayKey, string>)
+      : ["—"];
 
   return (
-    <footer id="contact" className="bg-primary/10 mt-20">
+    <footer id="contact" className="bg-primary/20 mt-20">
       <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-light tracking-wide mb-2">CHASHKA</h2>
+          <h2 className="text-3xl md:text-4xl font-light tracking-wide mb-2">
+            CHASHKA
+          </h2>
           <p className="text-sm text-muted-foreground tracking-[0.2em] uppercase">
             {t.hero.subtitle}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
-          <div className="space-y-3">
-            <div className="flex items-center justify-center gap-2">
-              <MapPin size={18} />
-              <span className="text-sm font-medium tracking-wide">{t.footer.location}</span>
-            </div>
-            <a
-              href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground leading-relaxed hover:text-foreground transition-colors"
-            >
-              {address}
-            </a>
-            {venue.phone && (
-              <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-                <Phone size={13} />
-                <a href={`tel:${venue.phone}`} className="hover:text-foreground transition-colors">
-                  {venue.phone}
-                </a>
-              </div>
-            )}
-          </div>
-
+          {/* Schedule — left */}
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2">
               <Clock size={18} />
-              <span className="text-sm font-medium tracking-wide">{t.footer.hours}</span>
+              <span className="text-sm font-medium tracking-wide">
+                {t.footer.hours}
+              </span>
             </div>
             <div className="text-sm text-muted-foreground leading-relaxed">
               {schedule.map((line: string, i: number) => (
@@ -58,19 +41,73 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Location + map — center */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <MapPin size={18} />
+              <span className="text-sm font-medium tracking-wide">
+                {t.footer.location}
+              </span>
+            </div>
+            {address ? (
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground leading-relaxed hover:text-foreground transition-colors"
+              >
+                {address}
+              </a>
+            ) : !venue.mapEmbedUrl && (
+              <span className="text-sm text-muted-foreground">—</span>
+            )}
+            {venue.mapEmbedUrl && (
+              <div className="rounded-xl overflow-hidden border border-border/30 shadow-sm">
+                <iframe
+                  title="CHASHKA on Google Maps"
+                  src={venue.mapEmbedUrl}
+                  width="100%"
+                  height="220"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="block"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Instagram + phone — right */}
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2">
               <Instagram size={18} />
-              <span className="text-sm font-medium tracking-wide">{t.footer.follow}</span>
+              <span className="text-sm font-medium tracking-wide">
+                {t.footer.follow}
+              </span>
             </div>
-            <a
-              href="https://instagram.com/chashka.elcampello"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              @chashka.elcampello
-            </a>
+            {venue.instagramUrl ? (
+              <a
+                href={venue.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                @{venue.instagramUrl.replace(/.*instagram\.com\//i, "").replace(/\/$/, "")}
+              </a>
+            ) : (
+              <span className="text-sm text-muted-foreground">—</span>
+            )}
+            {venue.phone && (
+              <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
+                <Phone size={13} />
+                <a
+                  href={`tel:${venue.phone}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {venue.phone}
+                </a>
+              </div>
+            )}
           </div>
         </div>
 
@@ -87,5 +124,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

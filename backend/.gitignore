@@ -31,3 +31,4 @@ Thumbs.db
 
 # Uploads
 public/uploads/
+backend/test-email.js

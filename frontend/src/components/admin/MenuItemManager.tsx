@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Reorder } from "framer-motion";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { useLongPressDrag } from "../../hooks/useLongPressDrag";
-import { Plus, Pencil, Trash2, ImageIcon, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ImageIcon, GripVertical } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -24,16 +24,18 @@ function SortableMenuItem({
   item,
   lang,
   onEdit,
+  onDuplicate,
   onDelete,
   onAutoScroll,
 }: {
   item: AdminMenuItem;
   lang: Lang;
   onEdit: (item: AdminMenuItem) => void;
+  onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onAutoScroll: () => void;
 }) {
-  const { controls, onPointerDown, pressing } = useLongPressDrag(500);
+  const { controls, onPointerDown, pressing, startDrag } = useLongPressDrag(500);
   const [isDragging, setIsDragging] = useState(false);
 
   const handlePointerDown = useCallback(
@@ -42,6 +44,14 @@ function SortableMenuItem({
       onAutoScroll();
     },
     [onPointerDown, onAutoScroll],
+  );
+
+  const handleGripPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onAutoScroll();
+      startDrag(e);
+    },
+    [startDrag, onAutoScroll],
   );
 
   useEffect(() => {
@@ -71,6 +81,8 @@ function SortableMenuItem({
       >
         <GripVertical
           size={14}
+          style={{ touchAction: "none" }}
+          onPointerDown={(e) => { e.stopPropagation(); handleGripPointerDown(e); }}
           className={`shrink-0 transition-colors duration-200 ${
             pressing || isDragging ? "text-foreground animate-pulse" : "text-muted-foreground/40"
           }`}
@@ -92,6 +104,13 @@ function SortableMenuItem({
         </div>
         <Button variant="ghost" onClick={() => onEdit(item)} className="p-1">
           <Pencil size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => item._id && onDuplicate(item._id)}
+          className="p-1"
+        >
+          <Copy size={14} />
         </Button>
         <Button
           variant="ghost-danger"
@@ -294,6 +313,16 @@ export default function MenuItemManager() {
     }
   };
 
+  const handleDuplicate = async (id: string) => {
+    try {
+      const copy = await adminService.duplicateMenuItem(id);
+      rebuildGrouped([...items, copy]);
+      showToast(c.saved, "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorSave, "error");
+    }
+  };
+
   const handleDelete = async (id: string) => {
     try {
       await adminService.deleteMenuItem(id);
@@ -381,6 +410,7 @@ export default function MenuItemManager() {
                     item={item}
                     lang={lang}
                     onEdit={openEdit}
+                    onDuplicate={handleDuplicate}
                     onDelete={setConfirmId}
                     onAutoScroll={startAutoScroll}
                   />

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { adminService } from "../../services/adminService";
+import PasswordInput from "../../components/ui/PasswordInput";
+
+const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
 
 export default function AdminResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
@@ -14,6 +17,10 @@ export default function AdminResetPasswordPage() {
     e.preventDefault();
     setError(null);
 
+    if (!isValidPassword(newPassword)) {
+      setError("Пароль має бути мінімум 8 символів та містити хоча б одну цифру");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setError("Паролі не співпадають");
       return;
@@ -63,14 +70,12 @@ export default function AdminResetPasswordPage() {
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
               Новий пароль
             </label>
-            <input
-              type="password"
-              required
-              minLength={6}
+            <PasswordInput
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
-              placeholder="••••••••"
+              onChange={setNewPassword}
+              placeholder="Мінімум 8 символів та одна цифра"
+              required
+              autoComplete="new-password"
             />
           </div>
 
@@ -78,14 +83,11 @@ export default function AdminResetPasswordPage() {
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
               Підтвердіть пароль
             </label>
-            <input
-              type="password"
-              required
-              minLength={6}
+            <PasswordInput
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
-              placeholder="••••••••"
+              onChange={setConfirmPassword}
+              required
+              autoComplete="new-password"
             />
           </div>
 

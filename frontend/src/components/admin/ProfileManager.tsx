@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
-import { Save, Check, Mail, ShieldCheck } from "lucide-react";
+import { Save, Check, Mail, ShieldCheck, X } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
 import Loader from "../ui/Loader";
 import Button from "../ui/Button";
 import SectionTitle from "../ui/SectionTitle";
+import PasswordInput from "../ui/PasswordInput";
 import type { AdminProfile } from "../../types/admin";
 
 const inputClass =
   "w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors";
 const labelClass = "text-xs tracking-wide uppercase text-muted-foreground";
+
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
 
 export default function ProfileManager() {
   const { t } = useLanguage();
@@ -21,6 +25,7 @@ export default function ProfileManager() {
   const [profile, setProfile] = useState<AdminProfile>({
     _id: "",
     email: "",
+    pendingEmail: undefined,
     firstName: "",
     lastName: "",
     emailVerified: false,
@@ -31,17 +36,28 @@ export default function ProfileManager() {
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
 
-  // Password state
+  // Email change form
+  const [newEmail, setNewEmail] = useState("");
+  const [emailChangeSent, setEmailChangeSent] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [cancellingEmail, setCancellingEmail] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resentEmail, setResentEmail] = useState(false);
+
+  // Name form
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [savedName, setSavedName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  // Password form
   const [pwForm, setPwForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savedProfile, setSavedProfile] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
-
   const [savingPw, setSavingPw] = useState(false);
   const [savedPw, setSavedPw] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
@@ -49,7 +65,11 @@ export default function ProfileManager() {
   useEffect(() => {
     adminService
       .getProfile()
-      .then(setProfile)
+      .then((data) => {
+        setProfile(data);
+        setFirstName(data.firstName);
+        setLastName(data.lastName);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -67,52 +87,96 @@ export default function ProfileManager() {
     }
   };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
+  const handleSaveName = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile.email.trim()) {
-      setProfileError(c.errorSave);
-      return;
-    }
-    setSavingProfile(true);
-    setProfileError(null);
+    setSavingName(true);
+    setNameError(null);
     try {
       const updated = await adminService.updateProfile({
-        email: profile.email.trim(),
-        firstName: profile.firstName.trim(),
-        lastName: profile.lastName.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
       });
       setProfile(updated);
-      setSavedProfile(true);
-      setTimeout(() => setSavedProfile(false), 2500);
+      setSavedName(true);
+      setTimeout(() => setSavedName(false), 2500);
       showToast(c.saved, "success");
     } catch (err) {
-      setProfileError(err instanceof Error ? err.message : c.errorSave);
+      setNameError(err instanceof Error ? err.message : c.errorSave);
     } finally {
-      setSavingProfile(false);
+      setSavingName(false);
+    }
+  };
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailError(null);
+    setEmailChangeSent(false);
+
+    if (!isValidEmail(newEmail)) {
+      setEmailError("Введіть коректний email (наприклад admin@example.com)");
+      return;
+    }
+    if (newEmail.trim() === profile.email) {
+      setEmailError("Новий email збігається з поточним");
+      return;
+    }
+
+    setSavingEmail(true);
+    try {
+      const updated = await adminService.updateProfile({ email: newEmail.trim() });
+      setProfile(updated);
+      setNewEmail("");
+      setEmailChangeSent(true);
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : c.errorSave);
+    } finally {
+      setSavingEmail(false);
+    }
+  };
+
+  const handleResendEmailChange = async () => {
+    setResendingEmail(true);
+    try {
+      await adminService.resendEmailChange();
+      setResentEmail(true);
+      setTimeout(() => setResentEmail(false), 4000);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorSave, "error");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
+  const handleCancelEmailChange = async () => {
+    setCancellingEmail(true);
+    try {
+      const updated = await adminService.cancelEmailChange();
+      setProfile(updated);
+      setEmailChangeSent(false);
+      showToast(c.saved, "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : c.errorSave, "error");
+    } finally {
+      setCancellingEmail(false);
     }
   };
 
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !pwForm.currentPassword.trim() ||
-      !pwForm.newPassword.trim() ||
-      !pwForm.confirmPassword.trim()
-    ) {
-      setPwError(c.errorSave);
+    setPwError(null);
+
+    if (!isValidPassword(pwForm.newPassword)) {
+      setPwError("Пароль має бути мінімум 8 символів та містити хоча б одну цифру");
       return;
     }
     if (pwForm.newPassword !== pwForm.confirmPassword) {
       setPwError(p.passwordMismatch);
       return;
     }
+
     setSavingPw(true);
-    setPwError(null);
     try {
-      await adminService.changePassword(
-        pwForm.currentPassword,
-        pwForm.newPassword,
-      );
+      await adminService.changePassword(pwForm.currentPassword, pwForm.newPassword);
       setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setSavedPw(true);
       setTimeout(() => setSavedPw(false), 2500);
@@ -145,25 +209,23 @@ export default function ProfileManager() {
         </div>
       )}
 
-      {profile.emailVerified && (
+      {profile.emailVerified && !profile.pendingEmail && (
         <div className="flex items-center gap-2 text-sm text-green-700">
           <ShieldCheck size={15} />
           <span>{p.emailVerifiedStatus}</span>
         </div>
       )}
 
-      {/* Personal info */}
-      <form onSubmit={handleSaveProfile} className="space-y-4">
+      {/* Personal info — name only */}
+      <form onSubmit={handleSaveName} className="space-y-4">
         <SectionTitle>{p.personalTitle}</SectionTitle>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className={labelClass}>{p.firstName}</label>
             <input
-              value={profile.firstName}
-              onChange={(e) =>
-                setProfile((f) => ({ ...f, firstName: e.target.value }))
-              }
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               className={inputClass}
               placeholder={p.firstName}
             />
@@ -171,37 +233,103 @@ export default function ProfileManager() {
           <div className="space-y-1">
             <label className={labelClass}>{p.lastName}</label>
             <input
-              value={profile.lastName}
-              onChange={(e) =>
-                setProfile((f) => ({ ...f, lastName: e.target.value }))
-              }
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               className={inputClass}
               placeholder={p.lastName}
             />
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className={labelClass}>{p.email}</label>
-          <input
-            type="email"
-            value={profile.email}
-            onChange={(e) =>
-              setProfile((f) => ({ ...f, email: e.target.value }))
-            }
-            className={inputClass}
-            placeholder="email@example.com"
-            required
-          />
-        </div>
+        {nameError && <p className="text-sm text-red-500">{nameError}</p>}
 
-        {profileError && <p className="text-sm text-red-500">{profileError}</p>}
-
-        <Button type="submit" disabled={savingProfile} className="px-5 py-2">
-          {savedProfile ? <Check size={14} /> : <Save size={14} />}
-          {savingProfile ? c.saving : savedProfile ? c.saved : c.save}
+        <Button type="submit" disabled={savingName} className="px-5 py-2">
+          {savedName ? <Check size={14} /> : <Save size={14} />}
+          {savingName ? c.saving : savedName ? c.saved : c.save}
         </Button>
       </form>
+
+      {/* Email change section */}
+      <div className="space-y-4">
+        <SectionTitle>{p.email}</SectionTitle>
+
+        {/* Current email */}
+        <div className="space-y-1">
+          <label className={labelClass}>{p.email}</label>
+          <p className="py-2 text-sm border-b border-border/50">{profile.email}</p>
+        </div>
+
+        {/* Pending email banner */}
+        {profile.pendingEmail && (
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded px-4 py-3 text-sm">
+            <Mail size={16} className="text-blue-500 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-blue-800 font-medium">{p.pendingEmailNote}</p>
+              <p className="text-blue-700 mt-0.5">{profile.pendingEmail}</p>
+              <p className="text-blue-600 text-xs mt-1">{p.emailChangeSent}</p>
+              <button
+                onClick={handleResendEmailChange}
+                disabled={resendingEmail || resentEmail}
+                className="mt-2 text-xs underline text-blue-700 hover:text-blue-900 transition-colors disabled:opacity-50"
+              >
+                {resentEmail ? p.resentEmailChange : resendingEmail ? "..." : p.resendEmailChange}
+              </button>
+            </div>
+            <button
+              onClick={handleCancelEmailChange}
+              disabled={cancellingEmail}
+              className="shrink-0 text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-50"
+              title={p.cancelEmailChange}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Email change success message */}
+        {emailChangeSent && !profile.pendingEmail && (
+          <p className="text-sm text-green-700">{p.emailChangeSent}</p>
+        )}
+
+        {/* New email form — hidden while pending */}
+        {!profile.pendingEmail && (
+          <form onSubmit={handleChangeEmail} className="space-y-4">
+            <div className="space-y-1">
+              <label className={labelClass}>{p.newEmailLabel}</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className={inputClass}
+                placeholder="new@example.com"
+                autoComplete="email"
+              />
+            </div>
+
+            {emailError && <p className="text-sm text-red-500">{emailError}</p>}
+
+            <Button
+              type="submit"
+              disabled={savingEmail || !newEmail.trim()}
+              className="px-5 py-2"
+            >
+              {savingEmail ? c.saving : p.changeEmailBtn}
+            </Button>
+          </form>
+        )}
+
+        {/* Cancel pending — shown as text button inside the banner (X icon), also separately */}
+        {profile.pendingEmail && (
+          <Button
+            variant="ghost"
+            onClick={handleCancelEmailChange}
+            disabled={cancellingEmail}
+            className="px-4 py-2 text-xs"
+          >
+            {cancellingEmail ? c.saving : p.cancelEmailChange}
+          </Button>
+        )}
+      </div>
 
       {/* Password */}
       <form onSubmit={handleSavePassword} className="space-y-4">
@@ -209,39 +337,32 @@ export default function ProfileManager() {
 
         <div className="space-y-1">
           <label className={labelClass}>{p.currentPassword}</label>
-          <input
-            type="password"
+          <PasswordInput
             value={pwForm.currentPassword}
-            onChange={(e) =>
-              setPwForm((f) => ({ ...f, currentPassword: e.target.value }))
-            }
-            className={inputClass}
+            onChange={(v) => setPwForm((f) => ({ ...f, currentPassword: v }))}
             required
+            autoComplete="current-password"
           />
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className={labelClass}>{p.newPassword}</label>
-            <input
-              type="password"
+            <PasswordInput
               value={pwForm.newPassword}
-              onChange={(e) =>
-                setPwForm((f) => ({ ...f, newPassword: e.target.value }))
-              }
-              className={inputClass}
+              onChange={(v) => setPwForm((f) => ({ ...f, newPassword: v }))}
+              placeholder="Мін. 8 символів та цифра"
               required
+              autoComplete="new-password"
             />
           </div>
           <div className="space-y-1">
             <label className={labelClass}>{p.confirmPassword}</label>
-            <input
-              type="password"
+            <PasswordInput
               value={pwForm.confirmPassword}
-              onChange={(e) =>
-                setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))
-              }
-              className={inputClass}
+              onChange={(v) => setPwForm((f) => ({ ...f, confirmPassword: v }))}
               required
+              autoComplete="new-password"
             />
           </div>
         </div>

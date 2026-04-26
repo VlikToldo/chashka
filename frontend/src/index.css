@@ -101,7 +101,7 @@
 
 @keyframes adminFadeIn {
   from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 .admin-fade-in {
   animation: adminFadeIn 0.3s ease-out both;

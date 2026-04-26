@@ -5,6 +5,7 @@ const adminUserSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   firstName: { type: String, default: "" },
   lastName: { type: String, default: "" },
+  pendingEmail: { type: String, default: null },
   emailVerified: { type: Boolean, default: false },
   emailVerificationToken: { type: String, default: null },
   emailVerificationExpires: { type: Date, default: null },

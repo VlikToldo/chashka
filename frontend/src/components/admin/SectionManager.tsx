@@ -32,6 +32,7 @@ function SectionRow({
   onEdit,
   onDelete,
   onRowPointerDown,
+  onGripPointerDown,
   pressing,
   isDragging,
 }: {
@@ -40,6 +41,7 @@ function SectionRow({
   onEdit: (s: Section) => void;
   onDelete: (id: string) => void;
   onRowPointerDown: (e: React.PointerEvent) => void;
+  onGripPointerDown: (e: React.PointerEvent) => void;
   pressing: boolean;
   isDragging: boolean;
 }) {
@@ -53,6 +55,8 @@ function SectionRow({
     >
       <GripVertical
         size={14}
+        style={{ touchAction: "none" }}
+        onPointerDown={(e) => { e.stopPropagation(); onGripPointerDown(e); }}
         className={`shrink-0 transition-colors duration-200 ${
           pressing || isDragging ? "text-foreground animate-pulse" : "text-muted-foreground/40"
         }`}
@@ -89,7 +93,7 @@ function SortableSection({
   onDelete: (id: string) => void;
   onAutoScroll: () => void;
 }) {
-  const { controls, onPointerDown, pressing } = useLongPressDrag(500);
+  const { controls, onPointerDown, pressing, startDrag } = useLongPressDrag(500);
   const [isDragging, setIsDragging] = useState(false);
 
   const handlePointerDown = useCallback(
@@ -98,6 +102,14 @@ function SortableSection({
       onAutoScroll();
     },
     [onPointerDown, onAutoScroll],
+  );
+
+  const handleGripPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onAutoScroll();
+      startDrag(e);
+    },
+    [startDrag, onAutoScroll],
   );
 
   useEffect(() => {
@@ -124,6 +136,7 @@ function SortableSection({
         onEdit={onEdit}
         onDelete={onDelete}
         onRowPointerDown={handlePointerDown}
+        onGripPointerDown={handleGripPointerDown}
         pressing={pressing}
         isDragging={isDragging}
       />

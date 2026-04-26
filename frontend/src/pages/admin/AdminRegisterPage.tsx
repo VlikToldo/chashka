@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { adminService } from "../../services/adminService";
 import { useAuth } from "../../context/AuthContext";
+import PasswordInput from "../../components/ui/PasswordInput";
+
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
 
 export default function AdminRegisterPage() {
   const { login } = useAuth();
@@ -15,25 +19,29 @@ export default function AdminRegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!isValidEmail(email)) {
+      setError("Введіть коректний email (наприклад admin@example.com)");
+      return;
+    }
+    if (!isValidPassword(password)) {
+      setError("Пароль має бути мінімум 8 символів та містити хоча б одну цифру");
+      return;
+    }
     if (password !== confirm) {
       setError("Паролі не збігаються");
       return;
     }
-    setError(null);
+
     setLoading(true);
     try {
-      const { token, user } = await adminService.register(
-        email,
-        password,
-        secretCode,
-      );
+      const { token, user } = await adminService.register(email, password, secretCode);
       login(token, user);
       navigate("/admin");
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Помилка реєстрації. Спробуйте ще раз.",
+        err instanceof Error ? err.message : "Помилка реєстрації. Спробуйте ще раз.",
       );
     } finally {
       setLoading(false);
@@ -72,6 +80,7 @@ export default function AdminRegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
               placeholder="admin@example.com"
+              autoComplete="email"
             />
           </div>
 
@@ -79,14 +88,12 @@ export default function AdminRegisterPage() {
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
               Пароль
             </label>
-            <input
-              type="password"
-              required
-              minLength={6}
+            <PasswordInput
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
-              placeholder="Мінімум 6 символів"
+              onChange={setPassword}
+              placeholder="Мінімум 8 символів та одна цифра"
+              required
+              autoComplete="new-password"
             />
           </div>
 
@@ -94,13 +101,11 @@ export default function AdminRegisterPage() {
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
               Підтвердіть пароль
             </label>
-            <input
-              type="password"
-              required
+            <PasswordInput
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
-              placeholder="••••••••"
+              onChange={setConfirm}
+              required
+              autoComplete="new-password"
             />
           </div>
 
@@ -108,13 +113,11 @@ export default function AdminRegisterPage() {
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
               Секретний код доступу
             </label>
-            <input
-              type="password"
-              required
+            <PasswordInput
               value={secretCode}
-              onChange={(e) => setSecretCode(e.target.value)}
-              className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors"
-              placeholder="••••••••"
+              onChange={setSecretCode}
+              required
+              autoComplete="off"
             />
           </div>
 

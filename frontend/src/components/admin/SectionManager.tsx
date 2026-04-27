@@ -45,7 +45,7 @@ function SectionRow({
   onGripPointerDown: (e: React.PointerEvent) => void;
   pressing: boolean;
   isDragging: boolean;
-  rowRef: React.RefObject<HTMLDivElement>;
+  rowRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div

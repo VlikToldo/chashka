@@ -25,6 +25,9 @@ const AboutManager = lazy(() => import("../../components/admin/AboutManager"));
 const SplashPhotoManager = lazy(
   () => import("../../components/admin/SplashPhotoManager"),
 );
+const DiscountManager = lazy(
+  () => import("../../components/admin/DiscountManager"),
+);
 
 type Tab =
   | "profile"
@@ -33,7 +36,8 @@ type Tab =
   | "hours"
   | "cover"
   | "about"
-  | "splash";
+  | "splash"
+  | "discounts";
 
 export default function AdminPage() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -45,6 +49,7 @@ export default function AdminPage() {
     { id: "profile", label: a.tabs.profile },
     { id: "sections", label: a.tabs.sections },
     { id: "menu", label: a.tabs.menu },
+    { id: "discounts", label: a.tabs.discounts },
     { id: "hours", label: a.tabs.hours },
     { id: "cover", label: a.tabs.cover },
     { id: "splash", label: a.tabs.splash },
@@ -207,6 +212,20 @@ export default function AdminPage() {
                   </p>
                 </div>
                 <AboutManager />
+              </section>
+            )}
+
+            {activeTab === "discounts" && (
+              <section>
+                <div className="mb-6">
+                  <h2 className="text-xl font-light tracking-wide mb-1">
+                    {a.discounts.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {a.discounts.desc}
+                  </p>
+                </div>
+                <DiscountManager />
               </section>
             )}
           </div>

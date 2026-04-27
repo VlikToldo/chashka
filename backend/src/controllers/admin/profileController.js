@@ -26,7 +26,9 @@ export async function updateProfile(req, res) {
   if (email !== undefined && email !== user.email) {
     const taken = await AdminUser.findOne({ email, _id: { $ne: user._id } });
     if (taken) {
-      return res.status(409).json({ message: "Цей email вже використовується" });
+      return res
+        .status(409)
+        .json({ message: "Цей email вже використовується" });
     }
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
@@ -40,7 +42,10 @@ export async function updateProfile(req, res) {
     try {
       await sendEmailChangeVerification(email, verificationToken);
     } catch (e) {
-      console.warn("[profile] Failed to send email change verification:", e.message);
+      console.warn(
+        "[profile] Failed to send email change verification:",
+        e.message,
+      );
     }
 
     const result = user.toObject();
@@ -70,8 +75,15 @@ export async function resendEmailChangeVerification(req, res) {
     await sendEmailChangeVerification(user.pendingEmail, verificationToken);
     res.json({ success: true });
   } catch (e) {
-    console.warn("[profile] Failed to resend email change verification:", e.message);
-    res.status(500).json({ message: "Не вдалося надіслати лист. Перевірте налаштування SMTP." });
+    console.warn(
+      "[profile] Failed to resend email change verification:",
+      e.message,
+    );
+    res
+      .status(500)
+      .json({
+        message: "Не вдалося надіслати лист. Перевірте налаштування SMTP.",
+      });
   }
 }
 
@@ -92,15 +104,38 @@ export async function cancelEmailChange(req, res) {
 export async function changePassword(req, res) {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword)
-    return res.status(400).json({ error: "currentPassword and newPassword required" });
+    return res
+      .status(400)
+      .json({ error: "currentPassword and newPassword required" });
 
   const user = await AdminUser.findById(req.admin.id);
   if (!user) return res.status(404).json({ error: "User not found" });
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!valid) return res.status(401).json({ message: "Невірний поточний пароль" });
+  if (!valid)
+    return res.status(401).json({ message: "Невірний поточний пароль" });
 
   user.passwordHash = await bcrypt.hash(newPassword, 10);
   await user.save();
+  res.json({ success: true });
+}
+
+export async function deleteAccount(req, res) {
+  const { password } = req.body;
+
+  const adminCount = await AdminUser.countDocuments();
+  if (adminCount <= 1) {
+    return res
+      .status(403)
+      .json({ error: "Неможливо видалити єдиний адміністраторський акаунт" });
+  }
+
+  const user = await AdminUser.findById(req.admin.id);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) return res.status(401).json({ error: "Невірний пароль" });
+
+  await AdminUser.findByIdAndDelete(user._id);
   res.json({ success: true });
 }

@@ -1,4 +1,5 @@
 import SplashPhoto from "../../models/SplashPhoto.js";
+import { deleteCloudinaryImage } from "../../utils/cloudinaryUtils.js";
 
 async function getOrCreateDoc() {
   let doc = await SplashPhoto.findOne();
@@ -17,8 +18,9 @@ export async function getSplashPhoto(_req, res) {
 }
 
 export async function uploadSplashPhoto(req, res) {
-  if (!req.file) return res.status(400).json({ message: "No image provided" });
+  if (!req.file) return res.status(400).json({ error: "No image provided" });
   const doc = await getOrCreateDoc();
+  if (doc.image) await deleteCloudinaryImage(doc.image);
   doc.image = req.file.path;
   doc.objectPosition = req.body.objectPosition ?? "{}";
   await doc.save();
@@ -28,7 +30,7 @@ export async function uploadSplashPhoto(req, res) {
 export async function updateSplashPhotoPosition(req, res) {
   const { objectPosition } = req.body;
   if (!objectPosition)
-    return res.status(400).json({ message: "objectPosition required" });
+    return res.status(400).json({ error: "objectPosition required" });
   const doc = await getOrCreateDoc();
   doc.objectPosition = objectPosition;
   await doc.save();
@@ -38,7 +40,7 @@ export async function updateSplashPhotoPosition(req, res) {
 export async function updateSplashPhotoEnabled(req, res) {
   const { enabled } = req.body;
   if (typeof enabled !== "boolean")
-    return res.status(400).json({ message: "enabled must be boolean" });
+    return res.status(400).json({ error: "enabled must be boolean" });
   const doc = await getOrCreateDoc();
   doc.enabled = enabled;
   await doc.save();
@@ -47,6 +49,7 @@ export async function updateSplashPhotoEnabled(req, res) {
 
 export async function deleteSplashPhoto(req, res) {
   const doc = await getOrCreateDoc();
+  if (doc.image) await deleteCloudinaryImage(doc.image);
   doc.image = null;
   doc.objectPosition = "{}";
   await doc.save();

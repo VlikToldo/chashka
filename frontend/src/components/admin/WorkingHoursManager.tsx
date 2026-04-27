@@ -194,7 +194,9 @@ export default function WorkingHoursManager() {
 
         <div className="space-y-1">
           <label className={labelClass}>{a.mapEmbed}</label>
-          <p className="text-xs text-muted-foreground/70 mb-1">{a.mapEmbedHint}</p>
+          <p className="text-xs text-muted-foreground/70 mb-1">
+            {a.mapEmbedHint}
+          </p>
           <textarea
             value={mapEmbedInput}
             onChange={(e) => setMapEmbedInput(e.target.value)}
@@ -261,10 +263,10 @@ export default function WorkingHoursManager() {
                       key={day}
                       type="button"
                       onClick={() => toggleDay(slot.id, day)}
-                      className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                      className={`w-8 h-8 text-xs rounded-full border transition-colors ${
                         slot.days.includes(day)
-                          ? "bg-foreground text-background"
-                          : "border border-border text-muted-foreground hover:border-foreground"
+                          ? "bg-foreground text-background border-foreground"
+                          : "border-border text-muted-foreground hover:border-foreground"
                       }`}
                     >
                       {dayLabels[day]}

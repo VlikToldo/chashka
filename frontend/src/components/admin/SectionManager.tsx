@@ -59,9 +59,14 @@ function SectionRow({
       <GripVertical
         size={14}
         style={{ touchAction: "none" }}
-        onPointerDown={(e) => { e.stopPropagation(); onGripPointerDown(e); }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          onGripPointerDown(e);
+        }}
         className={`shrink-0 transition-colors duration-200 ${
-          pressing || isDragging ? "text-foreground animate-pulse" : "text-muted-foreground/40"
+          pressing || isDragging
+            ? "text-foreground animate-pulse"
+            : "text-muted-foreground/40"
         }`}
       />
       <span className="flex-1 text-sm">{localize(s.name, lang)}</span>
@@ -96,7 +101,8 @@ function SortableSection({
   onDelete: (id: string) => void;
   onAutoScroll: () => void;
 }) {
-  const { controls, onPointerDown, pressing, startDrag } = useLongPressDrag(500);
+  const { controls, onPointerDown, pressing, startDrag } =
+    useLongPressDrag(500);
   const [isDragging, setIsDragging] = useState(false);
   const itemRef = useRef<HTMLLIElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -139,7 +145,10 @@ function SortableSection({
       let timer: ReturnType<typeof setTimeout> | null = null;
 
       const cancelEarly = () => {
-        if (timer) { clearTimeout(timer); timer = null; }
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
         earlyAc.abort();
       };
 
@@ -152,15 +161,26 @@ function SortableSection({
         },
         { passive: true, signal: earlyAc.signal },
       );
-      window.addEventListener("touchend", cancelEarly, { once: true, signal: earlyAc.signal });
-      window.addEventListener("touchcancel", cancelEarly, { once: true, signal: earlyAc.signal });
+      window.addEventListener("touchend", cancelEarly, {
+        once: true,
+        signal: earlyAc.signal,
+      });
+      window.addEventListener("touchcancel", cancelEarly, {
+        once: true,
+        signal: earlyAc.signal,
+      });
 
       timer = setTimeout(() => {
         earlyAc.abort();
         item.style.touchAction = "none";
         onAutoScroll();
         controls.start(
-          new PointerEvent("pointerdown", { clientX: startX, clientY: startY, pointerId: 1, bubbles: true }),
+          new PointerEvent("pointerdown", {
+            clientX: startX,
+            clientY: startY,
+            pointerId: 1,
+            bubbles: true,
+          }),
         );
 
         const dragAc = new AbortController();
@@ -171,7 +191,12 @@ function SortableSection({
             me.preventDefault();
             const t = me.touches[0];
             window.dispatchEvent(
-              new PointerEvent("pointermove", { clientX: t.clientX, clientY: t.clientY, pointerId: 1, bubbles: true }),
+              new PointerEvent("pointermove", {
+                clientX: t.clientX,
+                clientY: t.clientY,
+                pointerId: 1,
+                bubbles: true,
+              }),
             );
           },
           { passive: false, signal: dragAc.signal },
@@ -182,11 +207,22 @@ function SortableSection({
           item.style.touchAction = "";
           const t = me.changedTouches[0];
           window.dispatchEvent(
-            new PointerEvent("pointerup", { clientX: t.clientX, clientY: t.clientY, pointerId: 1, bubbles: true }),
+            new PointerEvent("pointerup", {
+              clientX: t.clientX,
+              clientY: t.clientY,
+              pointerId: 1,
+              bubbles: true,
+            }),
           );
         };
-        window.addEventListener("touchend", endDrag, { once: true, signal: dragAc.signal });
-        window.addEventListener("touchcancel", endDrag, { once: true, signal: dragAc.signal });
+        window.addEventListener("touchend", endDrag, {
+          once: true,
+          signal: dragAc.signal,
+        });
+        window.addEventListener("touchcancel", endDrag, {
+          once: true,
+          signal: dragAc.signal,
+        });
       }, 400);
     };
 
@@ -200,7 +236,9 @@ function SortableSection({
     } else {
       document.body.style.cursor = "";
     }
-    return () => { document.body.style.cursor = ""; };
+    return () => {
+      document.body.style.cursor = "";
+    };
   }, [isDragging]);
 
   return (
@@ -601,7 +639,7 @@ export default function SectionManager() {
                     key={cat}
                     type="button"
                     onClick={() => setModalCategory(cat)}
-                    className={`px-3 py-1 text-xs tracking-wide uppercase border transition-colors ${
+                    className={`px-3 py-1 text-xs tracking-wide uppercase border rounded-lg transition-colors ${
                       modalCategory === cat
                         ? "border-foreground bg-foreground text-background"
                         : "border-border text-muted-foreground hover:border-foreground/50"

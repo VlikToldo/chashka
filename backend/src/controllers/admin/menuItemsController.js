@@ -1,5 +1,7 @@
 import MenuItem from "../../models/MenuItem.js";
+import Discount from "../../models/Discount.js";
 import { translateToAllLanguages } from "../../services/translationService.js";
+import { deleteCloudinaryImage } from "../../utils/cloudinaryUtils.js";
 
 export async function getMenuItems(req, res) {
   const { sectionId, isExtra } = req.query;
@@ -20,6 +22,7 @@ export async function createMenuItem(req, res) {
     yield: yld,
     isExtra,
     order,
+    imagePosition,
   } = req.body;
   if (!sectionId || !name || !price)
     return res
@@ -47,6 +50,7 @@ export async function createMenuItem(req, res) {
     yield: translatedYield,
     isExtra: !!isExtra,
     order,
+    ...(imagePosition !== undefined ? { imagePosition } : {}),
   });
   res.status(201).json(item);
 }
@@ -61,6 +65,7 @@ export async function updateMenuItem(req, res) {
     sectionId,
     isExtra,
     order,
+    imagePosition,
   } = req.body;
   const update = {};
 
@@ -68,6 +73,7 @@ export async function updateMenuItem(req, res) {
   if (price !== undefined) update.price = price;
   if (isExtra !== undefined) update.isExtra = !!isExtra;
   if (order !== undefined) update.order = order;
+  if (imagePosition !== undefined) update.imagePosition = imagePosition;
 
   const translationFields = [
     ["name", name],
@@ -94,6 +100,9 @@ export async function updateMenuItem(req, res) {
 export async function deleteMenuItem(req, res) {
   const item = await MenuItem.findByIdAndDelete(req.params.id);
   if (!item) return res.status(404).json({ error: "Not found" });
+  if (item.image) await deleteCloudinaryImage(item.image);
+  // Remove this item from all discounts (cascade)
+  await Discount.updateMany({}, { $pull: { items: { itemId: item._id } } });
   res.json({ success: true });
 }
 
@@ -118,6 +127,7 @@ export async function duplicateMenuItem(req, res) {
     allergens: original.allergens,
     yield: original.yield,
     image: original.image,
+    imagePosition: original.imagePosition,
     isExtra: original.isExtra,
     order: original.order,
   });
@@ -127,11 +137,10 @@ export async function duplicateMenuItem(req, res) {
 export async function uploadMenuItemImage(req, res) {
   if (!req.file) return res.status(400).json({ error: "No image provided" });
   const imageUrl = req.file.path; // Cloudinary URL
-  const item = await MenuItem.findByIdAndUpdate(
-    req.params.id,
-    { image: imageUrl },
-    { new: true },
-  );
+  const item = await MenuItem.findById(req.params.id);
   if (!item) return res.status(404).json({ error: "Not found" });
+  if (item.image) await deleteCloudinaryImage(item.image);
+  item.image = imageUrl;
+  await item.save();
   res.json({ image: imageUrl });
 }

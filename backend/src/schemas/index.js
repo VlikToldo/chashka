@@ -11,7 +11,10 @@ const multilingualString = (required = false) => {
 };
 
 // Auth
-const passwordSchema = z.string().min(8).regex(/\d/, "Must contain at least one digit");
+const passwordSchema = z
+  .string()
+  .min(8)
+  .regex(/\d/, "Must contain at least one digit");
 
 export const registerSchema = z.object({
   email: z.string().email(),
@@ -34,6 +37,10 @@ export const updateProfileSchema = z.object({
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: passwordSchema,
+});
+
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1),
 });
 
 // Sections
@@ -117,4 +124,32 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   newPassword: passwordSchema,
+});
+
+// Discounts
+const scheduleSlotSchema = z.object({
+  days: z.array(z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM"),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM"),
+});
+
+const discountItemSchema = z.object({
+  itemId: z.string().min(1),
+  discountPrice: z.string().min(1),
+});
+
+export const createDiscountSchema = z.object({
+  label: z.string().optional(),
+  items: z.array(discountItemSchema).min(1),
+  schedule: z.array(scheduleSlotSchema).optional(),
+  utcOffset: z.number().int().min(-12).max(14).optional(),
+  enabled: z.boolean().optional(),
+});
+
+export const updateDiscountSchema = z.object({
+  label: z.string().optional(),
+  items: z.array(discountItemSchema).optional(),
+  schedule: z.array(scheduleSlotSchema).optional(),
+  utcOffset: z.number().int().min(-12).max(14).optional(),
+  enabled: z.boolean().optional(),
 });

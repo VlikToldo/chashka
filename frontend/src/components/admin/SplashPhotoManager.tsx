@@ -5,10 +5,10 @@ import {
   ImageOff,
   AlertTriangle,
   Save,
-  X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import AdminModal from "../ui/AdminModal";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -84,11 +84,14 @@ export default function SplashPhotoManager() {
       const drag = dragState.current;
       if (!drag) return;
       setEditPos((prev) =>
-        clampPosition({
-          ...prev,
-          x: drag.posX + (e.clientX - drag.x) * (100 / FRAME_W),
-          y: drag.posY + (e.clientY - drag.y) * (100 / FRAME_H),
-        }, FRAME_AR),
+        clampPosition(
+          {
+            ...prev,
+            x: drag.posX + (e.clientX - drag.x) * (100 / FRAME_W),
+            y: drag.posY + (e.clientY - drag.y) * (100 / FRAME_H),
+          },
+          FRAME_AR,
+        ),
       );
     };
     const onUp = () => {
@@ -110,10 +113,13 @@ export default function SplashPhotoManager() {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.08 : 0.08;
       setEditPos((prev) =>
-        clampPosition({
-          ...prev,
-          scale: Math.max(1, Math.min(4, prev.scale + delta)),
-        }, FRAME_AR),
+        clampPosition(
+          {
+            ...prev,
+            scale: Math.max(1, Math.min(4, prev.scale + delta)),
+          },
+          FRAME_AR,
+        ),
       );
     };
     el.addEventListener("wheel", onWheel, { passive: false });
@@ -152,23 +158,29 @@ export default function SplashPhotoManager() {
     const ts = touchState.current;
     const touch = e.touches[0];
     setEditPos((prev) =>
-      clampPosition({
-        ...prev,
-        x: ts.posX + (touch.clientX - ts.x) * (100 / FRAME_W),
-        y: ts.posY + (touch.clientY - ts.y) * (100 / FRAME_H),
-      }, FRAME_AR),
+      clampPosition(
+        {
+          ...prev,
+          x: ts.posX + (touch.clientX - ts.x) * (100 / FRAME_W),
+          y: ts.posY + (touch.clientY - ts.y) * (100 / FRAME_H),
+        },
+        FRAME_AR,
+      ),
     );
   }, []);
 
   const handleZoom = useCallback((dir: "in" | "out") => {
     setEditPos((prev) =>
-      clampPosition({
-        ...prev,
-        scale: Math.max(
-          1,
-          Math.min(4, prev.scale + (dir === "in" ? 0.15 : -0.15)),
-        ),
-      }, FRAME_AR),
+      clampPosition(
+        {
+          ...prev,
+          scale: Math.max(
+            1,
+            Math.min(4, prev.scale + (dir === "in" ? 0.15 : -0.15)),
+          ),
+        },
+        FRAME_AR,
+      ),
     );
   }, []);
 
@@ -284,13 +296,18 @@ export default function SplashPhotoManager() {
                       const drag = dragState.current;
                       if (!drag) return;
                       setCurrentPosition((prev) =>
-                        clampPosition({
-                          ...prev,
-                          x:
-                            drag.posX + (ev.clientX - drag.x) * (100 / FRAME_W),
-                          y:
-                            drag.posY + (ev.clientY - drag.y) * (100 / FRAME_H),
-                        }, FRAME_AR),
+                        clampPosition(
+                          {
+                            ...prev,
+                            x:
+                              drag.posX +
+                              (ev.clientX - drag.x) * (100 / FRAME_W),
+                            y:
+                              drag.posY +
+                              (ev.clientY - drag.y) * (100 / FRAME_H),
+                          },
+                          FRAME_AR,
+                        ),
                       );
                     };
                     const onUp = () => {
@@ -316,11 +333,14 @@ export default function SplashPhotoManager() {
                     const ts = touchState.current;
                     const touch = e.touches[0];
                     setCurrentPosition((prev) =>
-                      clampPosition({
-                        ...prev,
-                        x: ts.posX + (touch.clientX - ts.x) * (100 / FRAME_W),
-                        y: ts.posY + (touch.clientY - ts.y) * (100 / FRAME_H),
-                      }, FRAME_AR),
+                      clampPosition(
+                        {
+                          ...prev,
+                          x: ts.posX + (touch.clientX - ts.x) * (100 / FRAME_W),
+                          y: ts.posY + (touch.clientY - ts.y) * (100 / FRAME_H),
+                        },
+                        FRAME_AR,
+                      ),
                     );
                   }}
                   onTouchEnd={() => {
@@ -378,10 +398,13 @@ export default function SplashPhotoManager() {
                     variant="ghost"
                     onClick={() =>
                       setCurrentPosition((p) =>
-                        clampPosition({
-                          ...p,
-                          scale: Math.max(1, p.scale - 0.15),
-                        }, FRAME_AR),
+                        clampPosition(
+                          {
+                            ...p,
+                            scale: Math.max(1, p.scale - 0.15),
+                          },
+                          FRAME_AR,
+                        ),
                       )
                     }
                     disabled={currentPosition.scale <= 1}
@@ -397,10 +420,13 @@ export default function SplashPhotoManager() {
                     value={Math.round(currentPosition.scale * 100)}
                     onChange={(e) =>
                       setCurrentPosition((p) =>
-                        clampPosition({
-                          ...p,
-                          scale: Number(e.target.value) / 100,
-                        }, FRAME_AR),
+                        clampPosition(
+                          {
+                            ...p,
+                            scale: Number(e.target.value) / 100,
+                          },
+                          FRAME_AR,
+                        ),
                       )
                     }
                     className="flex-1 accent-foreground cursor-pointer"
@@ -409,10 +435,13 @@ export default function SplashPhotoManager() {
                     variant="ghost"
                     onClick={() =>
                       setCurrentPosition((p) =>
-                        clampPosition({
-                          ...p,
-                          scale: Math.min(4, p.scale + 0.15),
-                        }, FRAME_AR),
+                        clampPosition(
+                          {
+                            ...p,
+                            scale: Math.min(4, p.scale + 0.15),
+                          },
+                          FRAME_AR,
+                        ),
                       )
                     }
                     disabled={currentPosition.scale >= 4}
@@ -481,100 +510,96 @@ export default function SplashPhotoManager() {
 
       {/* Edit-position modal (shown while pending file selected) */}
       {preview && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="relative w-full max-w-xs bg-background border border-border rounded-xl my-8">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <h2 className="text-sm font-medium tracking-wide">
-                Позиція фото
-              </h2>
-              <Button variant="ghost" onClick={handleCancelPreview}>
-                <X size={18} />
+        <AdminModal
+          title="Позиція фото"
+          onClose={handleCancelPreview}
+          maxWidth="max-w-xs"
+        >
+          <div className="px-5 pb-5 flex flex-col items-center gap-5">
+            <p className="text-xs text-muted-foreground text-center">
+              Перетягуйте фото · прокручуйте для масштабу
+            </p>
+
+            {/* 9:16 drag frame */}
+            <div
+              ref={frameRef}
+              className="overflow-hidden rounded-xl bg-muted border-2 border-border cursor-grab active:cursor-grabbing select-none relative"
+              style={{ width: FRAME_W, height: FRAME_H }}
+              onMouseDown={handleMouseDownEdit}
+              onTouchStart={handleTouchStartEdit}
+              onTouchMove={handleTouchMoveEdit}
+              onTouchEnd={() => {
+                touchState.current = null;
+              }}
+            >
+              <div style={getWrapperStyle(editPos, FRAME_AR)}>
+                <img
+                  src={preview}
+                  alt="edit"
+                  draggable={false}
+                  style={imgStyle}
+                />
+              </div>
+            </div>
+
+            {/* Zoom slider */}
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={() => handleZoom("out")}
+                disabled={editPos.scale <= 1}
+                className="p-1.5"
+              >
+                <ZoomOut size={16} />
+              </Button>
+              <input
+                type="range"
+                min={100}
+                max={400}
+                step={1}
+                value={Math.round(editPos.scale * 100)}
+                onChange={(e) =>
+                  setEditPos((prev) =>
+                    clampPosition(
+                      {
+                        ...prev,
+                        scale: Number(e.target.value) / 100,
+                      },
+                      FRAME_AR,
+                    ),
+                  )
+                }
+                className="flex-1 accent-foreground cursor-pointer"
+              />
+              <Button
+                variant="ghost"
+                onClick={() => handleZoom("in")}
+                disabled={editPos.scale >= 4}
+                className="p-1.5"
+              >
+                <ZoomIn size={16} />
               </Button>
             </div>
 
-            <div className="px-5 pb-5 flex flex-col items-center gap-5">
-              <p className="text-xs text-muted-foreground text-center">
-                Перетягуйте фото · прокручуйте для масштабу
-              </p>
-
-              {/* 9:16 drag frame */}
-              <div
-                ref={frameRef}
-                className="overflow-hidden rounded-xl bg-muted border-2 border-border cursor-grab active:cursor-grabbing select-none relative"
-                style={{ width: FRAME_W, height: FRAME_H }}
-                onMouseDown={handleMouseDownEdit}
-                onTouchStart={handleTouchStartEdit}
-                onTouchMove={handleTouchMoveEdit}
-                onTouchEnd={() => {
-                  touchState.current = null;
-                }}
+            <div className="flex gap-3 w-full pt-1">
+              <Button
+                variant="secondary"
+                onClick={handleCancelPreview}
+                className="flex-1 px-4 py-2"
               >
-                <div style={getWrapperStyle(editPos, FRAME_AR)}>
-                  <img
-                    src={preview}
-                    alt="edit"
-                    draggable={false}
-                    style={imgStyle}
-                  />
-                </div>
-              </div>
-
-              {/* Zoom slider */}
-              <div className="flex items-center gap-2 w-full">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleZoom("out")}
-                  disabled={editPos.scale <= 1}
-                  className="p-1.5"
-                >
-                  <ZoomOut size={16} />
-                </Button>
-                <input
-                  type="range"
-                  min={100}
-                  max={400}
-                  step={1}
-                  value={Math.round(editPos.scale * 100)}
-                  onChange={(e) =>
-                    setEditPos((prev) =>
-                      clampPosition({
-                        ...prev,
-                        scale: Number(e.target.value) / 100,
-                      }, FRAME_AR),
-                    )
-                  }
-                  className="flex-1 accent-foreground cursor-pointer"
-                />
-                <Button
-                  variant="ghost"
-                  onClick={() => handleZoom("in")}
-                  disabled={editPos.scale >= 4}
-                  className="p-1.5"
-                >
-                  <ZoomIn size={16} />
-                </Button>
-              </div>
-
-              <div className="flex gap-3 w-full pt-1">
-                <Button
-                  variant="secondary"
-                  onClick={handleCancelPreview}
-                  className="flex-1 px-4 py-2"
-                >
-                  {c.cancel}
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 justify-center"
-                >
-                  <Save size={12} />
-                  {saving ? c.saving : c.save}
-                </Button>
-              </div>
+                {c.cancel}
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 px-4 py-2 justify-center"
+              >
+                <Save size={12} />
+                {saving ? c.saving : c.save}
+              </Button>
             </div>
           </div>
-        </div>
+        </AdminModal>
       )}
     </div>
   );

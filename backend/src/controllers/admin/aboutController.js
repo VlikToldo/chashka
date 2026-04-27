@@ -1,5 +1,6 @@
 import AboutBlock from "../../models/AboutBlock.js";
 import { translateToAllLanguages } from "../../services/translationService.js";
+import { deleteCloudinaryImage } from "../../utils/cloudinaryUtils.js";
 
 // Normalize legacy `image` field into the `images` array
 function normalizeBlock(block) {
@@ -70,6 +71,10 @@ export async function updateAbout(req, res) {
 export async function deleteAbout(req, res) {
   const block = await AboutBlock.findByIdAndDelete(req.params.id);
   if (!block) return res.status(404).json({ error: "Not found" });
+  const normalized = normalizeBlock(block);
+  await Promise.all(
+    normalized.images.map((img) => deleteCloudinaryImage(img.url)),
+  );
   res.json({ success: true });
 }
 
@@ -96,11 +101,16 @@ export async function updateAboutImages(req, res) {
   if (!Array.isArray(images))
     return res.status(400).json({ error: "images must be an array" });
 
-  const block = await AboutBlock.findByIdAndUpdate(
-    req.params.id,
-    { images },
-    { new: true },
-  );
+  const block = await AboutBlock.findById(req.params.id);
   if (!block) return res.status(404).json({ error: "Not found" });
+
+  // Delete images that are no longer in the new list
+  const existing = normalizeBlock(block);
+  const newUrls = new Set(images.map((i) => i.url));
+  const removed = existing.images.filter((i) => !newUrls.has(i.url));
+  await Promise.all(removed.map((i) => deleteCloudinaryImage(i.url)));
+
+  block.images = images;
+  await block.save();
   res.json(normalizeBlock(block));
 }

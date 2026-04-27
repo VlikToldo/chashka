@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { adminService } from "../../services/adminService";
+import { useLanguage } from "../../context/LanguageContext";
 import PasswordInput from "../../components/ui/PasswordInput";
 
 const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
@@ -8,6 +9,9 @@ const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
 export default function AdminResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const a = t.auth;
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,15 +22,15 @@ export default function AdminResetPasswordPage() {
     setError(null);
 
     if (!isValidPassword(newPassword)) {
-      setError("Пароль має бути мінімум 8 символів та містити хоча б одну цифру");
+      setError(a.weakPassword);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Паролі не співпадають");
+      setError(a.passwordMismatch);
       return;
     }
     if (!token) {
-      setError("Невірне посилання для відновлення");
+      setError(a.invalidResetLink);
       return;
     }
 
@@ -37,9 +41,7 @@ export default function AdminResetPasswordPage() {
         state: { message: "Пароль змінено. Увійдіть з новим паролем." },
       });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Помилка. Спробуйте ще раз.",
-      );
+      setError(err instanceof Error ? err.message : "Помилка. Спробуйте ще раз.");
     } finally {
       setLoading(false);
     }
@@ -53,14 +55,14 @@ export default function AdminResetPasswordPage() {
             to="/admin/login"
             className="inline-block text-xs tracking-[0.15em] uppercase text-muted-foreground/50 hover:text-muted-foreground transition-colors mb-6"
           >
-            ← До входу
+            {a.toLogin}
           </Link>
           <div>
             <Link to="/" className="text-2xl font-light tracking-[0.3em]">
               CHASHKA
             </Link>
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2">
-              Новий пароль
+              {a.newPasswordTitle}
             </p>
           </div>
         </div>
@@ -68,12 +70,12 @@ export default function AdminResetPasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Новий пароль
+              {a.newPasswordLabel}
             </label>
             <PasswordInput
               value={newPassword}
               onChange={setNewPassword}
-              placeholder="Мінімум 8 символів та одна цифра"
+              placeholder={a.passwordHint}
               required
               autoComplete="new-password"
             />
@@ -81,7 +83,7 @@ export default function AdminResetPasswordPage() {
 
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Підтвердіть пароль
+              {a.confirmPasswordLabel}
             </label>
             <PasswordInput
               value={confirmPassword}
@@ -98,7 +100,7 @@ export default function AdminResetPasswordPage() {
             disabled={loading}
             className="w-full py-3 bg-foreground text-background text-sm tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
           >
-            {loading ? "Збереження..." : "Зберегти пароль"}
+            {loading ? a.saving : a.savePasswordBtn}
           </button>
         </form>
       </div>

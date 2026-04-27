@@ -24,12 +24,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    const url: string = error?.config?.url ?? "";
+    const isPublicAuthEndpoint =
+      /\/(login|register|forgot-password|reset-password|verify-email|resend-verification)/.test(url);
+
+    if (error?.response?.status === 401 && !isPublicAuthEndpoint) {
       localStorage.removeItem("admin_token");
       localStorage.removeItem("admin_user");
       window.location.href = "/admin/login";
       return Promise.reject(new Error("Сесія завершена. Увійдіть знову."));
     }
+
     const message: string =
       error?.response?.data?.message ??
       error?.response?.data?.error ??

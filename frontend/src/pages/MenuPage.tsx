@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/Header";
@@ -64,11 +64,18 @@ export default function MenuPage() {
   } = useMenuSections();
 
   const [extrasActive, setExtrasActive] = useState(false);
+  const contentRef = useRef<HTMLElement>(null);
 
   // Reset extras tab when category changes
   useEffect(() => {
     setExtrasActive(false);
   }, [categoryFilter]);
+
+  const scrollToContent = () => {
+    if (!contentRef.current) return;
+    const top = contentRef.current.offsetTop - 64;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  };
 
   const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
   useSeoMeta({
@@ -119,7 +126,7 @@ export default function MenuPage() {
         {(["food", "drinks"] as const).map((cat) => (
           <button
             key={cat}
-            onClick={() => setCategoryFilter(cat)}
+            onClick={() => { setCategoryFilter(cat); scrollToContent(); }}
             className={`px-10 py-3 text-sm tracking-[0.2em] uppercase transition-colors ${
               categoryFilter === cat
                 ? "text-foreground border-b-2 border-foreground -mb-px"
@@ -149,6 +156,7 @@ export default function MenuPage() {
                   onClick={() => {
                     setActiveSection(section);
                     setExtrasActive(false);
+                    scrollToContent();
                   }}
                   className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
                     !extrasActive && activeSection?._id === section._id
@@ -168,7 +176,7 @@ export default function MenuPage() {
                     ease: "easeOut",
                     delay: filteredSections.length * 0.06,
                   }}
-                  onClick={() => setExtrasActive(true)}
+                  onClick={() => { setExtrasActive(true); scrollToContent(); }}
                   className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
                     extrasActive
                       ? "text-foreground border-b-2 border-foreground"
@@ -184,7 +192,7 @@ export default function MenuPage() {
       )}
 
       {/* Content */}
-      <section className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+      <section ref={contentRef} className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         {loading && <Loader />}
         {error && (
           <p className="text-center text-red-500 py-20">{t.menu.error}</p>

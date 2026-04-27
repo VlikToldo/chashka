@@ -37,6 +37,8 @@ function SortableMenuItem({
 }) {
   const { controls, onPointerDown, pressing, startDrag } = useLongPressDrag(500);
   const [isDragging, setIsDragging] = useState(false);
+  const itemRef = useRef<HTMLLIElement>(null);
+  const rowDivRef = useRef<HTMLDivElement>(null);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -48,11 +50,88 @@ function SortableMenuItem({
 
   const handleGripPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (itemRef.current) itemRef.current.style.touchAction = "none";
       onAutoScroll();
       startDrag(e);
     },
     [startDrag, onAutoScroll],
   );
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    if (itemRef.current) itemRef.current.style.touchAction = "";
+  }, []);
+
+  // Touch long-press drag: non-passive touchstart to prevent scroll/pointercancel,
+  // then bridge touchmove → synthetic PointerEvents so framer-motion can track movement
+  useEffect(() => {
+    const el = rowDivRef.current;
+    const item = itemRef.current;
+    if (!el || !item) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const startX = touch.clientX;
+      const startY = touch.clientY;
+      const earlyAc = new AbortController();
+      let timer: ReturnType<typeof setTimeout> | null = null;
+
+      const cancelEarly = () => {
+        if (timer) { clearTimeout(timer); timer = null; }
+        earlyAc.abort();
+      };
+
+      window.addEventListener(
+        "touchmove",
+        (me: TouchEvent) => {
+          const dx = me.touches[0].clientX - startX;
+          const dy = me.touches[0].clientY - startY;
+          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) cancelEarly();
+        },
+        { passive: true, signal: earlyAc.signal },
+      );
+      window.addEventListener("touchend", cancelEarly, { once: true, signal: earlyAc.signal });
+      window.addEventListener("touchcancel", cancelEarly, { once: true, signal: earlyAc.signal });
+
+      timer = setTimeout(() => {
+        earlyAc.abort();
+        item.style.touchAction = "none";
+        onAutoScroll();
+        controls.start(
+          new PointerEvent("pointerdown", { clientX: startX, clientY: startY, pointerId: 1, bubbles: true }),
+        );
+
+        const dragAc = new AbortController();
+
+        window.addEventListener(
+          "touchmove",
+          (me: TouchEvent) => {
+            me.preventDefault();
+            const t = me.touches[0];
+            window.dispatchEvent(
+              new PointerEvent("pointermove", { clientX: t.clientX, clientY: t.clientY, pointerId: 1, bubbles: true }),
+            );
+          },
+          { passive: false, signal: dragAc.signal },
+        );
+
+        const endDrag = (me: TouchEvent) => {
+          dragAc.abort();
+          item.style.touchAction = "";
+          const t = me.changedTouches[0];
+          window.dispatchEvent(
+            new PointerEvent("pointerup", { clientX: t.clientX, clientY: t.clientY, pointerId: 1, bubbles: true }),
+          );
+        };
+        window.addEventListener("touchend", endDrag, { once: true, signal: dragAc.signal });
+        window.addEventListener("touchcancel", endDrag, { once: true, signal: dragAc.signal });
+      }, 400);
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => el.removeEventListener("touchstart", onTouchStart);
+  }, [controls, onAutoScroll]);
 
   useEffect(() => {
     if (isDragging) {
@@ -65,14 +144,16 @@ function SortableMenuItem({
 
   return (
     <Reorder.Item
+      ref={itemRef}
       value={item}
       className="list-none"
       dragListener={false}
       dragControls={controls}
       onDragStart={() => setIsDragging(true)}
-      onDragEnd={() => setIsDragging(false)}
+      onDragEnd={handleDragEnd}
     >
       <div
+        ref={rowDivRef}
         className={`flex items-center gap-3 py-3 select-none transition-shadow duration-150
           ${isDragging ? "rounded-sm shadow-md ring-1 ring-foreground/10 bg-background cursor-grabbing" : ""}
           ${pressing && !isDragging ? "cursor-grab" : ""}

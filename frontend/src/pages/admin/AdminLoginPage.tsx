@@ -2,12 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { adminService } from "../../services/adminService";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import PasswordInput from "../../components/ui/PasswordInput";
 
 export default function AdminLoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
+  const a = t.auth;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +28,7 @@ export default function AdminLoginPage() {
       login(token, user);
       navigate("/admin");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Помилка входу. Спробуйте ще раз.",
-      );
+      setError(err instanceof Error ? err.message : "Помилка входу. Спробуйте ще раз.");
     } finally {
       setLoading(false);
     }
@@ -40,14 +42,14 @@ export default function AdminLoginPage() {
             to="/"
             className="inline-block text-xs tracking-[0.15em] uppercase text-muted-foreground/50 hover:text-muted-foreground transition-colors mb-6"
           >
-            ← На сайт
+            {a.toSite}
           </Link>
           <div>
             <Link to="/" className="text-2xl font-light tracking-[0.3em]">
               CHASHKA
             </Link>
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2">
-              Адмін панель
+              {a.adminPanel}
             </p>
           </div>
         </div>
@@ -55,7 +57,7 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Email
+              {a.emailLabel}
             </label>
             <input
               type="email"
@@ -71,13 +73,13 @@ export default function AdminLoginPage() {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label className="text-xs tracking-wide uppercase text-muted-foreground">
-                Пароль
+                {a.passwordLabel}
               </label>
               <Link
                 to="/admin/forgot-password"
                 className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
               >
-                Забули пароль?
+                {a.forgotPasswordLink}
               </Link>
             </div>
             <PasswordInput
@@ -98,17 +100,17 @@ export default function AdminLoginPage() {
             disabled={loading}
             className="w-full py-3 bg-foreground text-background text-sm tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
           >
-            {loading ? "Вхід..." : "Увійти"}
+            {loading ? a.signingIn : a.signInBtn}
           </button>
         </form>
 
         <p className="text-center text-xs text-muted-foreground mt-8">
-          Немає акаунту?{" "}
+          {a.noAccount}{" "}
           <Link
             to="/admin/register"
             className="underline hover:text-foreground transition-colors"
           >
-            Зареєструватись
+            {a.registerLink}
           </Link>
         </p>
 

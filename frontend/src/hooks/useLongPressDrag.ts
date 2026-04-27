@@ -14,9 +14,11 @@ export function useLongPressDrag(delay = 500) {
     [controls],
   );
 
-  // Long-press drag — for the whole row on desktop
+  // Long-press drag — desktop only (touch uses grip handle instead)
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (e.pointerType === "touch") return;
+
       const nativeEvent = e.nativeEvent;
       setPressing(true);
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { adminService } from "../../services/adminService";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import PasswordInput from "../../components/ui/PasswordInput";
 
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
@@ -10,6 +11,9 @@ const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
 export default function AdminRegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const a = t.auth;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -22,15 +26,15 @@ export default function AdminRegisterPage() {
     setError(null);
 
     if (!isValidEmail(email)) {
-      setError("Введіть коректний email (наприклад admin@example.com)");
+      setError(a.invalidEmail);
       return;
     }
     if (!isValidPassword(password)) {
-      setError("Пароль має бути мінімум 8 символів та містити хоча б одну цифру");
+      setError(a.weakPassword);
       return;
     }
     if (password !== confirm) {
-      setError("Паролі не збігаються");
+      setError(a.passwordMismatch);
       return;
     }
 
@@ -40,9 +44,7 @@ export default function AdminRegisterPage() {
       login(token, user);
       navigate("/admin");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Помилка реєстрації. Спробуйте ще раз.",
-      );
+      setError(err instanceof Error ? err.message : "Помилка реєстрації. Спробуйте ще раз.");
     } finally {
       setLoading(false);
     }
@@ -56,14 +58,14 @@ export default function AdminRegisterPage() {
             to="/"
             className="inline-block text-xs tracking-[0.15em] uppercase text-muted-foreground/50 hover:text-muted-foreground transition-colors mb-6"
           >
-            ← На сайт
+            {a.toSite}
           </Link>
           <div>
             <Link to="/" className="text-2xl font-light tracking-[0.3em]">
               CHASHKA
             </Link>
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2">
-              Реєстрація
+              {a.registration}
             </p>
           </div>
         </div>
@@ -71,7 +73,7 @@ export default function AdminRegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Email
+              {a.emailLabel}
             </label>
             <input
               type="email"
@@ -86,12 +88,12 @@ export default function AdminRegisterPage() {
 
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Пароль
+              {a.passwordLabel}
             </label>
             <PasswordInput
               value={password}
               onChange={setPassword}
-              placeholder="Мінімум 8 символів та одна цифра"
+              placeholder={a.passwordHint}
               required
               autoComplete="new-password"
             />
@@ -99,7 +101,7 @@ export default function AdminRegisterPage() {
 
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Підтвердіть пароль
+              {a.confirmPasswordLabel}
             </label>
             <PasswordInput
               value={confirm}
@@ -111,7 +113,7 @@ export default function AdminRegisterPage() {
 
           <div className="space-y-1">
             <label className="text-xs tracking-wide uppercase text-muted-foreground">
-              Секретний код доступу
+              {a.secretCodeLabel}
             </label>
             <PasswordInput
               value={secretCode}
@@ -128,17 +130,17 @@ export default function AdminRegisterPage() {
             disabled={loading}
             className="w-full py-3 bg-foreground text-background text-sm tracking-wide uppercase hover:opacity-80 transition-opacity disabled:opacity-40"
           >
-            {loading ? "Реєстрація..." : "Зареєструватись"}
+            {loading ? a.registering : a.registerBtn}
           </button>
         </form>
 
         <p className="text-center text-xs text-muted-foreground mt-8">
-          Вже є акаунт?{" "}
+          {a.hasAccount}{" "}
           <Link
             to="/admin/login"
             className="underline hover:text-foreground transition-colors"
           >
-            Увійти
+            {a.signInLink}
           </Link>
         </p>
       </div>

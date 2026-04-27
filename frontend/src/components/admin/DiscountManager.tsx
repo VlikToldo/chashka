@@ -17,6 +17,7 @@ import Button from "../ui/Button";
 import ConfirmModal from "../ui/ConfirmModal";
 import AdminModal from "../ui/AdminModal";
 import { localize } from "../../utils/localize";
+import type { Lang } from "../../i18n/translations";
 import {
   type Discount,
   type DiscountItem,
@@ -76,7 +77,7 @@ interface ItemPickerProps {
   allItems: AdminMenuItem[];
   sections: Section[];
   selectedItems: DiscountItem[];
-  lang: string;
+  lang: Lang;
   labels: {
     searchPlaceholder: string;
     selectedItems: string;

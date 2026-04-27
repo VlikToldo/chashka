@@ -99,7 +99,7 @@ export default function MenuPage() {
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
-  const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
+  const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.com.es";
   useSeoMeta({
     title: `CHASHKA | ${t.hero.subtitle} — El Campello, Valencia`,
     description: t.hero.description,

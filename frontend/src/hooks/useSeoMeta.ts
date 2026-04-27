@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SITE_URL = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
+const SITE_URL = import.meta.env.VITE_SITE_URL ?? "https://chashka.com.es";
 
 const LOCALE_MAP: Record<string, string> = {
   es: "es_ES",

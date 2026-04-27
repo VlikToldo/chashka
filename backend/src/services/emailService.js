@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
-const FROM = process.env.SMTP_FROM || "noreply@chashka.cafe";
+const FROM = process.env.SMTP_FROM || "noreply@chashka.com.es";
 
 function createTransporter() {
   return nodemailer.createTransport({

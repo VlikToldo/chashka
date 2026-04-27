@@ -94,6 +94,7 @@ function SortableMenuItem({
     if (!el || !item) return;
 
     const onTouchStart = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest("button")) return;
       e.preventDefault();
       const touch = e.touches[0];
       const startX = touch.clientX;
@@ -244,20 +245,27 @@ function SortableMenuItem({
           <p className="text-sm truncate">{localize(item.name, lang)}</p>
           <p className="text-xs text-muted-foreground">{item.price}</p>
         </div>
-        <Button variant="ghost" onClick={() => onEdit(item)} className="p-1">
+        <Button
+          variant="ghost"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onEdit(item)}
+          className="p-2"
+        >
           <Pencil size={14} />
         </Button>
         <Button
           variant="ghost"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={() => item._id && onDuplicate(item._id)}
-          className="p-1"
+          className="p-2"
         >
           <Copy size={14} />
         </Button>
         <Button
           variant="ghost-danger"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={() => item._id && onDelete(item._id)}
-          className="p-1"
+          className="p-2"
         >
           <Trash2 size={14} />
         </Button>

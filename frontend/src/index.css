@@ -52,6 +52,12 @@
   a[href] {
     cursor: pointer;
   }
+  /* Prevent iOS Safari from auto-zooming on input focus */
+  @media (max-width: 767px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @media (min-width: 1280px) {

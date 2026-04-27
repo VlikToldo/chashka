@@ -5,4 +5,4 @@ Disallow: /admin
 Disallow: /admin/login
 Disallow: /admin/register
 
-Sitemap: https://chashka.cafe/sitemap.xml
+Sitemap: https://chashka.com.es/sitemap.xml

@@ -56,7 +56,7 @@ export default function AboutPage() {
   const [blocks, setBlocks] = useState<AboutBlock[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.cafe";
+  const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.com.es";
   useSeoMeta({
     title: `${t.about.heroTitle} | CHASHKA — El Campello, Valencia`,
     description: t.about.seoDescription,

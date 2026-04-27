@@ -3,25 +3,25 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>https://chashka.cafe/</loc>
+    <loc>https://chashka.com.es/</loc>
     <lastmod>2026-04-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://chashka.cafe/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://chashka.cafe/" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://chashka.cafe/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://chashka.cafe/" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://chashka.com.es/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://chashka.com.es/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://chashka.com.es/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://chashka.com.es/" />
   </url>
 
   <url>
-    <loc>https://chashka.cafe/about</loc>
+    <loc>https://chashka.com.es/about</loc>
     <lastmod>2026-04-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://chashka.cafe/about" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://chashka.cafe/about" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://chashka.cafe/about" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://chashka.cafe/about" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://chashka.com.es/about" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://chashka.com.es/about" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://chashka.com.es/about" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://chashka.com.es/about" />
   </url>
 
 </urlset>

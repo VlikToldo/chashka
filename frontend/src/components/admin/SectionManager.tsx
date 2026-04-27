@@ -72,15 +72,17 @@ function SectionRow({
       <span className="flex-1 text-sm">{localize(s.name, lang)}</span>
       <Button
         variant="ghost"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => s._id && onEdit(s)}
-        className="p-1"
+        className="p-2"
       >
         <Pencil size={14} />
       </Button>
       <Button
         variant="ghost-danger"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => s._id && onDelete(s._id)}
-        className="p-1"
+        className="p-2"
       >
         <Trash2 size={14} />
       </Button>
@@ -137,6 +139,7 @@ function SortableSection({
     if (!el || !item) return;
 
     const onTouchStart = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest("button")) return;
       e.preventDefault();
       const touch = e.touches[0];
       const startX = touch.clientX;

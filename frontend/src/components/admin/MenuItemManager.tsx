@@ -2,7 +2,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Reorder } from "framer-motion";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { useLongPressDrag } from "../../hooks/useLongPressDrag";
-import { Plus, Pencil, Trash2, Copy, ImageIcon, GripVertical } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Copy,
+  ImageIcon,
+  GripVertical,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -17,6 +26,20 @@ import type { AdminMenuItem, Section } from "../../types/admin";
 import type { LocalizedString } from "../../types/menu";
 import type { Lang } from "../../i18n/translations";
 import { getOptimizedUrl } from "../../utils/imageUrl";
+import {
+  type PhotoPosition,
+  DEFAULT_POSITION,
+  parsePosition,
+  positionToString,
+  getWrapperStyle,
+  imgStyle as photoImgStyle,
+  clampPosition,
+} from "../../utils/photoPosition";
+
+// 16:9 frame for menu item photo positioning
+const ITEM_FRAME_W = 240;
+const ITEM_FRAME_H = Math.round((ITEM_FRAME_W * 9) / 16);
+const ITEM_FRAME_AR = 16 / 9;
 
 const EMPTY_L: LocalizedString = { uk: "", en: "", es: "" };
 
@@ -35,7 +58,8 @@ function SortableMenuItem({
   onDelete: (id: string) => void;
   onAutoScroll: () => void;
 }) {
-  const { controls, onPointerDown, pressing, startDrag } = useLongPressDrag(500);
+  const { controls, onPointerDown, pressing, startDrag } =
+    useLongPressDrag(500);
   const [isDragging, setIsDragging] = useState(false);
   const itemRef = useRef<HTMLLIElement>(null);
   const rowDivRef = useRef<HTMLDivElement>(null);
@@ -78,7 +102,10 @@ function SortableMenuItem({
       let timer: ReturnType<typeof setTimeout> | null = null;
 
       const cancelEarly = () => {
-        if (timer) { clearTimeout(timer); timer = null; }
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
         earlyAc.abort();
       };
 
@@ -91,15 +118,26 @@ function SortableMenuItem({
         },
         { passive: true, signal: earlyAc.signal },
       );
-      window.addEventListener("touchend", cancelEarly, { once: true, signal: earlyAc.signal });
-      window.addEventListener("touchcancel", cancelEarly, { once: true, signal: earlyAc.signal });
+      window.addEventListener("touchend", cancelEarly, {
+        once: true,
+        signal: earlyAc.signal,
+      });
+      window.addEventListener("touchcancel", cancelEarly, {
+        once: true,
+        signal: earlyAc.signal,
+      });
 
       timer = setTimeout(() => {
         earlyAc.abort();
         item.style.touchAction = "none";
         onAutoScroll();
         controls.start(
-          new PointerEvent("pointerdown", { clientX: startX, clientY: startY, pointerId: 1, bubbles: true }),
+          new PointerEvent("pointerdown", {
+            clientX: startX,
+            clientY: startY,
+            pointerId: 1,
+            bubbles: true,
+          }),
         );
 
         const dragAc = new AbortController();
@@ -110,7 +148,12 @@ function SortableMenuItem({
             me.preventDefault();
             const t = me.touches[0];
             window.dispatchEvent(
-              new PointerEvent("pointermove", { clientX: t.clientX, clientY: t.clientY, pointerId: 1, bubbles: true }),
+              new PointerEvent("pointermove", {
+                clientX: t.clientX,
+                clientY: t.clientY,
+                pointerId: 1,
+                bubbles: true,
+              }),
             );
           },
           { passive: false, signal: dragAc.signal },
@@ -121,11 +164,22 @@ function SortableMenuItem({
           item.style.touchAction = "";
           const t = me.changedTouches[0];
           window.dispatchEvent(
-            new PointerEvent("pointerup", { clientX: t.clientX, clientY: t.clientY, pointerId: 1, bubbles: true }),
+            new PointerEvent("pointerup", {
+              clientX: t.clientX,
+              clientY: t.clientY,
+              pointerId: 1,
+              bubbles: true,
+            }),
           );
         };
-        window.addEventListener("touchend", endDrag, { once: true, signal: dragAc.signal });
-        window.addEventListener("touchcancel", endDrag, { once: true, signal: dragAc.signal });
+        window.addEventListener("touchend", endDrag, {
+          once: true,
+          signal: dragAc.signal,
+        });
+        window.addEventListener("touchcancel", endDrag, {
+          once: true,
+          signal: dragAc.signal,
+        });
       }, 400);
     };
 
@@ -139,7 +193,9 @@ function SortableMenuItem({
     } else {
       document.body.style.cursor = "";
     }
-    return () => { document.body.style.cursor = ""; };
+    return () => {
+      document.body.style.cursor = "";
+    };
   }, [isDragging]);
 
   return (
@@ -163,9 +219,14 @@ function SortableMenuItem({
         <GripVertical
           size={14}
           style={{ touchAction: "none" }}
-          onPointerDown={(e) => { e.stopPropagation(); handleGripPointerDown(e); }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            handleGripPointerDown(e);
+          }}
           className={`shrink-0 transition-colors duration-200 ${
-            pressing || isDragging ? "text-foreground animate-pulse" : "text-muted-foreground/40"
+            pressing || isDragging
+              ? "text-foreground animate-pulse"
+              : "text-muted-foreground/40"
           }`}
         />
         {item.image ? (
@@ -213,6 +274,7 @@ const EMPTY_FORM: Omit<AdminMenuItem, "_id"> = {
   allergens: { ...EMPTY_L },
   yield: { ...EMPTY_L },
   image: "",
+  imagePosition: "",
   isExtra: false,
 };
 
@@ -237,18 +299,23 @@ export default function MenuItemManager() {
   }
   function parseYield(raw: string): {
     amount: string;
-    unit: "ml" | "l" | "g" | "kg";
+    unit: "ml" | "l" | "g" | "kg" | "pcs";
   } {
     const trimmed = raw.trim();
     if (!trimmed) return { amount: "", unit: "ml" };
     const lastSpace = trimmed.lastIndexOf(" ");
     if (lastSpace === -1) return { amount: trimmed, unit: "ml" };
     const unit = trimmed.slice(lastSpace + 1);
-    const known = ["ml", "l", "g", "kg"];
+    const known = ["ml", "l", "g", "kg", "pcs"];
     const mapped = unit === "г" ? "g" : unit;
     return {
       amount: trimmed.slice(0, lastSpace),
-      unit: (known.includes(mapped) ? mapped : "ml") as "ml" | "l" | "g" | "kg",
+      unit: (known.includes(mapped) ? mapped : "ml") as
+        | "ml"
+        | "l"
+        | "g"
+        | "kg"
+        | "pcs",
     };
   }
 
@@ -266,13 +333,75 @@ export default function MenuItemManager() {
   const [priceAmount, setPriceAmount] = useState("");
   const [priceCurrency, setPriceCurrency] = useState("€");
   const [yieldAmount, setYieldAmount] = useState("");
-  const [yieldUnit, setYieldUnit] = useState<"ml" | "l" | "g" | "kg">("ml");
+  const [yieldUnit, setYieldUnit] = useState<"ml" | "l" | "g" | "kg" | "pcs">(
+    "ml",
+  );
+  const [editPos, setEditPos] = useState<PhotoPosition>(DEFAULT_POSITION);
   const fileRef = useRef<HTMLInputElement>(null);
+  const editPosFrameRef = useRef<HTMLDivElement>(null);
+  const editPosDragState = useRef<{
+    x: number;
+    y: number;
+    posX: number;
+    posY: number;
+  } | null>(null);
+  const editPosTouchState = useRef<{
+    x: number;
+    y: number;
+    posX: number;
+    posY: number;
+  } | null>(null);
   const reorderTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [itemsBySection, setItemsBySection] = useState<
     Record<string, AdminMenuItem[]>
   >({});
   const [search, setSearch] = useState("");
+
+  // Wheel zoom on the photo position frame
+  useEffect(() => {
+    const el = editPosFrameRef.current;
+    if (!el || !imagePreview) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.08 : 0.08;
+      setEditPos((prev) =>
+        clampPosition(
+          { ...prev, scale: Math.max(1, Math.min(4, prev.scale + delta)) },
+          ITEM_FRAME_AR,
+        ),
+      );
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [imagePreview]);
+
+  // Global mousemove/mouseup for photo position drag
+  useEffect(() => {
+    if (!imagePreview) return;
+    const onMove = (e: MouseEvent) => {
+      const drag = editPosDragState.current;
+      if (!drag) return;
+      setEditPos((prev) =>
+        clampPosition(
+          {
+            ...prev,
+            x: drag.posX + (e.clientX - drag.x) * (100 / ITEM_FRAME_W),
+            y: drag.posY + (e.clientY - drag.y) * (100 / ITEM_FRAME_H),
+          },
+          ITEM_FRAME_AR,
+        ),
+      );
+    };
+    const onUp = () => {
+      editPosDragState.current = null;
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, [imagePreview]);
 
   useEffect(() => {
     Promise.all([adminService.getMenuItems(), adminService.getSections()])
@@ -304,6 +433,7 @@ export default function MenuItemManager() {
     setPriceAmount("");
     setPriceCurrency("\u20ac");
     setYieldAmount("");
+    setEditPos(DEFAULT_POSITION);
     // yieldUnit intentionally not reset — preserves last-used unit
     setShowForm(true);
   };
@@ -318,10 +448,12 @@ export default function MenuItemManager() {
       allergens: item.allergens,
       yield: item.yield,
       image: item.image ?? "",
+      imagePosition: item.imagePosition ?? "",
       isExtra: item.isExtra ?? false,
     });
     setImagePreview(item.image ?? null);
     setPendingFile(null);
+    setEditPos(parsePosition(item.imagePosition ?? "{}"));
     const { amount: pAmt, currency: pCur } = parsePrice(item.price);
     setPriceAmount(pAmt);
     setPriceCurrency(pCur);
@@ -335,8 +467,18 @@ export default function MenuItemManager() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const url = URL.createObjectURL(file);
     setPendingFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview(url);
+    const tmp = new Image();
+    tmp.onload = () => {
+      setEditPos({
+        ...DEFAULT_POSITION,
+        ar: tmp.naturalWidth / tmp.naturalHeight,
+      });
+    };
+    tmp.src = url;
+    e.target.value = "";
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -357,6 +499,7 @@ export default function MenuItemManager() {
       ...form,
       price: priceAmount.trim() ? `${priceAmount.trim()}${priceCurrency}` : "",
       yield: { es: yieldStr, uk: yieldStr, en: yieldStr } as LocalizedString,
+      imagePosition: imagePreview ? positionToString(editPos) : "",
     };
     setSaving(true);
     setError(null);
@@ -667,12 +810,15 @@ export default function MenuItemManager() {
                 />
                 <CustomSelect
                   value={yieldUnit}
-                  onChange={(v) => setYieldUnit(v as "ml" | "l" | "g" | "kg")}
+                  onChange={(v) =>
+                    setYieldUnit(v as "ml" | "l" | "g" | "kg" | "pcs")
+                  }
                   options={[
                     { value: "ml", label: "ml" },
                     { value: "l", label: "l" },
                     { value: "g", label: "g" },
                     { value: "kg", label: "kg" },
+                    { value: "pcs", label: a.fields.unitPcs },
                   ]}
                   inline
                 />
@@ -685,13 +831,7 @@ export default function MenuItemManager() {
                   {a.fields.photo}
                 </label>
                 <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="preview"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  ) : (
+                  {!imagePreview && (
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                       <ImageIcon size={20} className="text-muted-foreground" />
                     </div>
@@ -711,6 +851,122 @@ export default function MenuItemManager() {
                     onChange={handleFileChange}
                   />
                 </div>
+
+                {imagePreview && (
+                  <div className="space-y-2 pt-1">
+                    <div
+                      ref={editPosFrameRef}
+                      className="relative overflow-hidden rounded-lg bg-muted border border-border cursor-grab active:cursor-grabbing select-none"
+                      style={{ width: ITEM_FRAME_W, height: ITEM_FRAME_H }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        editPosDragState.current = {
+                          x: e.clientX,
+                          y: e.clientY,
+                          posX: editPos.x,
+                          posY: editPos.y,
+                        };
+                      }}
+                      onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        editPosTouchState.current = {
+                          x: touch.clientX,
+                          y: touch.clientY,
+                          posX: editPos.x,
+                          posY: editPos.y,
+                        };
+                      }}
+                      onTouchMove={(e) => {
+                        if (!editPosTouchState.current) return;
+                        e.preventDefault();
+                        const ts = editPosTouchState.current;
+                        const touch = e.touches[0];
+                        setEditPos((prev) =>
+                          clampPosition(
+                            {
+                              ...prev,
+                              x:
+                                ts.posX +
+                                (touch.clientX - ts.x) * (100 / ITEM_FRAME_W),
+                              y:
+                                ts.posY +
+                                (touch.clientY - ts.y) * (100 / ITEM_FRAME_H),
+                            },
+                            ITEM_FRAME_AR,
+                          ),
+                        );
+                      }}
+                      onTouchEnd={() => {
+                        editPosTouchState.current = null;
+                      }}
+                    >
+                      <div style={getWrapperStyle(editPos, ITEM_FRAME_AR)}>
+                        <img
+                          src={imagePreview}
+                          alt="preview"
+                          draggable={false}
+                          style={photoImgStyle}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      className="flex items-center gap-2"
+                      style={{ width: ITEM_FRAME_W }}
+                    >
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        onClick={() =>
+                          setEditPos((p) =>
+                            clampPosition(
+                              { ...p, scale: Math.max(1, p.scale - 0.15) },
+                              ITEM_FRAME_AR,
+                            ),
+                          )
+                        }
+                        disabled={editPos.scale <= 1}
+                        className="p-1"
+                      >
+                        <ZoomOut size={14} />
+                      </Button>
+                      <input
+                        type="range"
+                        min={100}
+                        max={400}
+                        step={1}
+                        value={Math.round(editPos.scale * 100)}
+                        onChange={(e) =>
+                          setEditPos((p) =>
+                            clampPosition(
+                              { ...p, scale: Number(e.target.value) / 100 },
+                              ITEM_FRAME_AR,
+                            ),
+                          )
+                        }
+                        className="flex-1 accent-foreground cursor-pointer"
+                      />
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        onClick={() =>
+                          setEditPos((p) =>
+                            clampPosition(
+                              { ...p, scale: Math.min(4, p.scale + 0.15) },
+                              ITEM_FRAME_AR,
+                            ),
+                          )
+                        }
+                        disabled={editPos.scale >= 4}
+                        className="p-1"
+                      >
+                        <ZoomIn size={14} />
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/60">
+                      перетягуйте · прокручуйте для масштабу
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

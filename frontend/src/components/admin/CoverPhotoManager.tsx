@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ImageIcon, Upload, Save, X, ZoomIn, ZoomOut } from "lucide-react";
+import { ImageIcon, Upload, Save, ZoomIn, ZoomOut } from "lucide-react";
+import AdminModal from "../ui/AdminModal";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -261,98 +262,91 @@ export default function CoverPhotoManager() {
       </div>
 
       {pendingFile && preview && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="relative w-full max-w-xs bg-background border border-border rounded-xl my-8">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <h2 className="text-sm font-medium tracking-wide">
-                Позиція фото
-              </h2>
-              <Button variant="ghost" onClick={handleCancel}>
-                <X size={18} />
+        <AdminModal
+          title="Позиція фото"
+          onClose={handleCancel}
+          maxWidth="max-w-xs"
+        >
+          <div className="px-5 pb-5 flex flex-col items-center gap-5">
+            <p className="text-xs text-muted-foreground text-center">
+              Перетягуйте фото · прокручуйте для масштабу
+            </p>
+
+            <div
+              ref={circleRef}
+              className="rounded-full overflow-hidden bg-muted border-2 border-border cursor-grab active:cursor-grabbing select-none relative"
+              style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => {
+                touchState.current = null;
+              }}
+            >
+              <div style={getWrapperStyle(editPos)}>
+                <img
+                  src={preview}
+                  alt="edit"
+                  draggable={false}
+                  style={imgStyle}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={() => handleZoom("out")}
+                disabled={editPos.scale <= 1}
+                className="p-1.5"
+              >
+                <ZoomOut size={16} />
+              </Button>
+              <input
+                type="range"
+                min={100}
+                max={400}
+                step={1}
+                value={Math.round(editPos.scale * 100)}
+                onChange={(e) =>
+                  setEditPos((prev) =>
+                    clampPosition({
+                      ...prev,
+                      scale: Number(e.target.value) / 100,
+                    }),
+                  )
+                }
+                className="flex-1 accent-foreground cursor-pointer"
+              />
+              <Button
+                variant="ghost"
+                onClick={() => handleZoom("in")}
+                disabled={editPos.scale >= 4}
+                className="p-1.5"
+              >
+                <ZoomIn size={16} />
               </Button>
             </div>
 
-            <div className="px-5 pb-5 flex flex-col items-center gap-5">
-              <p className="text-xs text-muted-foreground text-center">
-                Перетягуйте фото · прокручуйте для масштабу
-              </p>
-
-              <div
-                ref={circleRef}
-                className="rounded-full overflow-hidden bg-muted border-2 border-border cursor-grab active:cursor-grabbing select-none relative"
-                style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={() => {
-                  touchState.current = null;
-                }}
+            <div className="flex gap-3 w-full pt-1">
+              <Button
+                variant="secondary"
+                onClick={handleCancel}
+                className="flex-1 px-4 py-2"
               >
-                <div style={getWrapperStyle(editPos)}>
-                  <img
-                    src={preview}
-                    alt="edit"
-                    draggable={false}
-                    style={imgStyle}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 w-full">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleZoom("out")}
-                  disabled={editPos.scale <= 1}
-                  className="p-1.5"
-                >
-                  <ZoomOut size={16} />
-                </Button>
-                <input
-                  type="range"
-                  min={100}
-                  max={400}
-                  step={1}
-                  value={Math.round(editPos.scale * 100)}
-                  onChange={(e) =>
-                    setEditPos((prev) =>
-                      clampPosition({
-                        ...prev,
-                        scale: Number(e.target.value) / 100,
-                      }),
-                    )
-                  }
-                  className="flex-1 accent-foreground cursor-pointer"
-                />
-                <Button
-                  variant="ghost"
-                  onClick={() => handleZoom("in")}
-                  disabled={editPos.scale >= 4}
-                  className="p-1.5"
-                >
-                  <ZoomIn size={16} />
-                </Button>
-              </div>
-
-              <div className="flex gap-3 w-full pt-1">
-                <Button
-                  variant="secondary"
-                  onClick={handleCancel}
-                  className="flex-1 px-4 py-2"
-                >
-                  Скасувати
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 justify-center"
-                >
-                  <Save size={12} />
-                  {saving ? "..." : saved ? "✓" : "Зберегти"}
-                </Button>
-              </div>
+                Скасувати
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 px-4 py-2 justify-center"
+              >
+                <Save size={12} />
+                {saving ? "..." : saved ? "✓" : "Зберегти"}
+              </Button>
             </div>
           </div>
-        </div>
+        </AdminModal>
       )}
     </div>
   );

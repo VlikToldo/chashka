@@ -5,6 +5,7 @@ import type {
   TimeSlot,
   AdminProfile,
   VenueInfo,
+  Discount,
 } from "../types/admin";
 import type { AboutBlock } from "../types/about";
 
@@ -26,7 +27,9 @@ api.interceptors.response.use(
   (error) => {
     const url: string = error?.config?.url ?? "";
     const isPublicAuthEndpoint =
-      /\/(login|register|forgot-password|reset-password|verify-email|resend-verification)/.test(url);
+      /\/(login|register|forgot-password|reset-password|verify-email|resend-verification)/.test(
+        url,
+      );
 
     if (error?.response?.status === 401 && !isPublicAuthEndpoint) {
       localStorage.removeItem("admin_token");
@@ -268,6 +271,10 @@ export const adminService = {
     await api.put("/password", { currentPassword, newPassword });
   },
 
+  deleteAccount: async (password: string): Promise<void> => {
+    await api.delete("/account", { data: { password } });
+  },
+
   // Venue
   getVenue: async (): Promise<VenueInfo> => {
     const { data } = await api.get("/venue");
@@ -356,5 +363,30 @@ export const adminService = {
 
   resetPassword: async (token: string, newPassword: string): Promise<void> => {
     await api.post(`/reset-password/${token}`, { newPassword });
+  },
+
+  // Discounts
+  getDiscounts: async (): Promise<Discount[]> => {
+    const { data } = await api.get("/discounts");
+    return data;
+  },
+
+  createDiscount: async (
+    discount: Omit<Discount, "_id">,
+  ): Promise<Discount> => {
+    const { data } = await api.post("/discounts", discount);
+    return data;
+  },
+
+  updateDiscount: async (
+    id: string,
+    discount: Partial<Discount>,
+  ): Promise<Discount> => {
+    const { data } = await api.put(`/discounts/${id}`, discount);
+    return data;
+  },
+
+  deleteDiscount: async (id: string): Promise<void> => {
+    await api.delete(`/discounts/${id}`);
   },
 };

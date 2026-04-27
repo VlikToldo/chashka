@@ -7,6 +7,12 @@ const multilingualString = (required = false) => ({
 });
 
 const venueSchema = new mongoose.Schema({
+  _singleton: {
+    type: String,
+    default: "singleton",
+    unique: true,
+    immutable: true,
+  },
   address: multilingualString(),
   phone: { type: String, default: "" },
   mapEmbedUrl: { type: String, default: "" },

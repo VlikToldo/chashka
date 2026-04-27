@@ -3,13 +3,15 @@ import { useEffect, useRef } from "react";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const goog = (): any => (window as any).google;
 
-const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as
+  | string
+  | undefined;
 
 function loadMapsScript() {
   if (!MAPS_API_KEY) return;
-  if (document.querySelector('script[data-maps-loader]')) return;
+  if (document.querySelector("script[data-maps-loader]")) return;
   const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
   script.async = true;
   script.defer = true;
   script.dataset.mapsLoader = "1";

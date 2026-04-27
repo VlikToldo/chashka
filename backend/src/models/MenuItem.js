@@ -18,8 +18,12 @@ const menuItemSchema = new mongoose.Schema({
   allergens: multilingualString(),
   yield: multilingualString(),
   image: { type: String },
+  imagePosition: { type: String },
   isExtra: { type: Boolean, default: false },
   order: { type: Number, default: 0 },
 });
+
+menuItemSchema.index({ sectionId: 1, order: 1 });
+menuItemSchema.index({ isExtra: 1 });
 
 export default mongoose.model("MenuItem", menuItemSchema);

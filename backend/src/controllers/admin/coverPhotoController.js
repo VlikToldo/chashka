@@ -1,4 +1,5 @@
 import CoverPhoto from "../../models/CoverPhoto.js";
+import { deleteCloudinaryImage } from "../../utils/cloudinaryUtils.js";
 
 export async function getCoverPhoto(_req, res) {
   let doc = await CoverPhoto.findOne();
@@ -16,6 +17,7 @@ export async function uploadCoverPhoto(req, res) {
   const objectPosition = req.body.objectPosition || "center center";
   let doc = await CoverPhoto.findOne();
   if (doc) {
+    if (doc.image) await deleteCloudinaryImage(doc.image);
     doc.image = imageUrl;
     doc.objectPosition = objectPosition;
     await doc.save();

@@ -12,4 +12,6 @@ const sectionSchema = new mongoose.Schema({
   order: { type: Number, default: 0 },
 });
 
+sectionSchema.index({ category: 1, order: 1 });
+
 export default mongoose.model("Section", sectionSchema);

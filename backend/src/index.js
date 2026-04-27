@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "express-async-errors";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -13,6 +14,7 @@ import coverPhotoPublicRouter from "./routes/public/coverPhoto.js";
 import venuePublicRouter from "./routes/public/venue.js";
 import workingHoursPublicRouter from "./routes/public/workingHours.js";
 import splashPhotoPublicRouter from "./routes/public/splashPhoto.js";
+import discountsPublicRouter from "./routes/public/discounts.js";
 
 import authAdminRouter from "./routes/admin/auth.js";
 import profileAdminRouter from "./routes/admin/profile.js";
@@ -23,6 +25,7 @@ import coverPhotoAdminRouter from "./routes/admin/coverPhoto.js";
 import aboutAdminRouter from "./routes/admin/about.js";
 import venueAdminRouter from "./routes/admin/venue.js";
 import splashPhotoAdminRouter from "./routes/admin/splashPhoto.js";
+import discountsAdminRouter from "./routes/admin/discounts.js";
 
 import { authenticateAdmin } from "./middleware/authenticateAdmin.js";
 
@@ -39,6 +42,12 @@ if (!process.env.DEEPL_API_KEY) {
     "[startup] DEEPL_API_KEY is not set — translations will fall back to the source language",
   );
 }
+
+if (process.env.NODE_ENV === "production" && !process.env.ALLOWED_ORIGIN) {
+  console.error(
+    "[startup] ALLOWED_ORIGIN is not set — all cross-origin requests will be blocked. Set ALLOWED_ORIGIN to allow your frontend.",
+  );
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,7 +57,17 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGIN ?? "*",
+    origin: (origin, callback) => {
+      if (!process.env.ALLOWED_ORIGIN) {
+        // No whitelist configured — block all cross-origin requests
+        return callback(new Error("CORS: ALLOWED_ORIGIN is not configured"));
+      }
+      // Allow same-origin (no Origin header) or matching origin
+      if (!origin || origin === process.env.ALLOWED_ORIGIN) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin '${origin}' is not allowed`));
+    },
   }),
 );
 
@@ -65,6 +84,7 @@ app.use("/api/cover-photo", coverPhotoPublicRouter);
 app.use("/api/venue", venuePublicRouter);
 app.use("/api/working-hours", workingHoursPublicRouter);
 app.use("/api/splash", splashPhotoPublicRouter);
+app.use("/api/discounts", discountsPublicRouter);
 
 // Admin auth (no middleware)
 app.use("/api/admin", authAdminRouter);
@@ -78,6 +98,7 @@ app.use("/api/admin/cover-photo", authenticateAdmin, coverPhotoAdminRouter);
 app.use("/api/admin/about", authenticateAdmin, aboutAdminRouter);
 app.use("/api/admin/venue", authenticateAdmin, venueAdminRouter);
 app.use("/api/admin/splash", authenticateAdmin, splashPhotoAdminRouter);
+app.use("/api/admin/discounts", authenticateAdmin, discountsAdminRouter);
 
 // ── Centralized error handler ─────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
@@ -87,7 +108,7 @@ app.use((err, _req, res, _next) => {
   if (status >= 500) {
     console.error("[error]", err);
   }
-  res.status(status).json({ message });
+  res.status(status).json({ error: message });
 });
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -67,5 +67,26 @@ export interface AdminMenuItem {
   allergens: LocalizedString;
   yield: LocalizedString;
   image?: string;
+  imagePosition?: string;
   isExtra?: boolean;
+}
+
+export interface DiscountItem {
+  itemId: string;
+  discountPrice: string;
+}
+
+export interface DiscountScheduleSlot {
+  days: DayKey[];
+  startTime: string; // HH:MM UTC
+  endTime: string; // HH:MM UTC
+}
+
+export interface Discount {
+  _id?: string;
+  label: string;
+  items: DiscountItem[];
+  schedule: DiscountScheduleSlot[];
+  utcOffset: number;
+  enabled: boolean;
 }

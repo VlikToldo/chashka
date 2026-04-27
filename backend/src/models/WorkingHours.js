@@ -8,6 +8,12 @@ const slotSchema = new mongoose.Schema({
 });
 
 const workingHoursSchema = new mongoose.Schema({
+  _singleton: {
+    type: String,
+    default: "singleton",
+    unique: true,
+    immutable: true,
+  },
   slots: [slotSchema],
 });
 

@@ -20,5 +20,6 @@ export interface MenuItem {
   allergens?: LocalizedString;
   yield?: LocalizedString;
   image?: string;
+  imagePosition?: string;
   isExtra?: boolean;
 }

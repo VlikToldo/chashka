@@ -5,11 +5,17 @@ import type { MenuItem } from "../types/menu";
 import { useLanguage } from "../context/LanguageContext";
 import { localize } from "../utils/localize";
 import { getOptimizedUrl } from "../utils/imageUrl";
+import {
+  parsePosition,
+  getWrapperStyle,
+  imgStyle as photoImgStyle,
+} from "../utils/photoPosition";
 
 interface Props {
   title: string;
   items: MenuItem[];
   extras?: MenuItem[];
+  discounts?: Record<string, string>;
 }
 
 function PhotoModal({
@@ -61,9 +67,11 @@ function PhotoModal({
 const MenuItemRow = memo(function MenuItemRow({
   item,
   index = 0,
+  discountPrice,
 }: {
   item: MenuItem;
   index?: number;
+  discountPrice?: string;
 }) {
   const { lang, t } = useLanguage();
   const name = localize(item.name, lang);
@@ -111,9 +119,20 @@ const MenuItemRow = memo(function MenuItemRow({
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               <span className="hidden sm:block h-px bg-border/50 w-16 group-hover:bg-primary/30 transition-colors" />
-              <span className="text-lg md:text-xl font-light tabular-nums">
-                {item.price}
-              </span>
+              {discountPrice ? (
+                <span className="flex items-baseline gap-1.5">
+                  <s className="text-sm text-muted-foreground/60 tabular-nums">
+                    {item.price}
+                  </s>
+                  <span className="text-lg md:text-xl font-light tabular-nums text-primary">
+                    {discountPrice}
+                  </span>
+                </span>
+              ) : (
+                <span className="text-lg md:text-xl font-light tabular-nums">
+                  {item.price}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -136,12 +155,28 @@ const MenuItemRow = memo(function MenuItemRow({
                       setPhotoOpen(true);
                     }}
                   >
-                    <img
-                      src={getOptimizedUrl(item.image)}
-                      alt={name}
-                      loading="lazy"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
+                    {item.imagePosition ? (
+                      <div
+                        style={getWrapperStyle(
+                          parsePosition(item.imagePosition),
+                          16 / 9,
+                        )}
+                      >
+                        <img
+                          src={getOptimizedUrl(item.image)}
+                          alt={name}
+                          loading="lazy"
+                          style={photoImgStyle}
+                        />
+                      </div>
+                    ) : (
+                      <img
+                        src={getOptimizedUrl(item.image)}
+                        alt={name}
+                        loading="lazy"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    )}
                   </div>
                 ) : null}
 
@@ -185,9 +220,11 @@ const MenuItemRow = memo(function MenuItemRow({
 const ExtraItem = memo(function ExtraItem({
   item,
   index = 0,
+  discountPrice,
 }: {
   item: MenuItem;
   index?: number;
+  discountPrice?: string;
 }) {
   const { lang } = useLanguage();
   const name = localize(item.name, lang);
@@ -213,14 +250,30 @@ const ExtraItem = memo(function ExtraItem({
           </span>
         )}
       </div>
-      <span className="text-sm font-light tabular-nums shrink-0">
-        {item.price}
-      </span>
+      {discountPrice ? (
+        <span className="flex items-baseline gap-1 shrink-0">
+          <s className="text-xs text-muted-foreground/60 tabular-nums">
+            {item.price}
+          </s>
+          <span className="text-sm font-light tabular-nums text-primary">
+            {discountPrice}
+          </span>
+        </span>
+      ) : (
+        <span className="text-sm font-light tabular-nums shrink-0">
+          {item.price}
+        </span>
+      )}
     </motion.div>
   );
 });
 
-export default function MenuSection({ title, items, extras = [] }: Props) {
+export default function MenuSection({
+  title,
+  items,
+  extras = [],
+  discounts = {},
+}: Props) {
   const { t } = useLanguage();
   return (
     <AnimatePresence mode="wait">
@@ -241,10 +294,27 @@ export default function MenuSection({ title, items, extras = [] }: Props) {
           {title}
         </motion.h2>
 
+        {items.length === 0 ? (
+          <p className="text-center text-muted-foreground py-10">
+            {t.menu.noSectionItems}
+          </p>
+        ) : (
+          <div className="max-w-3xl mx-auto space-y-0">
+            {items.map((item, i) => (
+              <MenuItemRow
+                key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en}
+                item={item}
+                index={i}
+                discountPrice={item._id ? discounts[item._id] : undefined}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Extras block */}
         {extras.length > 0 && (
           <motion.div
-            className="max-w-3xl mx-auto mb-10"
+            className="max-w-3xl mx-auto mt-10"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
@@ -259,26 +329,11 @@ export default function MenuSection({ title, items, extras = [] }: Props) {
                   key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en}
                   item={item}
                   index={i}
+                  discountPrice={item._id ? discounts[item._id] : undefined}
                 />
               ))}
             </div>
           </motion.div>
-        )}
-
-        {items.length === 0 ? (
-          <p className="text-center text-muted-foreground py-10">
-            {t.menu.noSectionItems}
-          </p>
-        ) : (
-          <div className="max-w-3xl mx-auto space-y-0">
-            {items.map((item, i) => (
-              <MenuItemRow
-                key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en}
-                item={item}
-                index={i}
-              />
-            ))}
-          </div>
         )}
       </motion.div>
     </AnimatePresence>

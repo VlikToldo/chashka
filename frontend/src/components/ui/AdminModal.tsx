@@ -2,10 +2,10 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface Props {
-  title: string
-  onClose: () => void
-  children: React.ReactNode
-  maxWidth?: string
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxWidth?: string;
 }
 
 export default function AdminModal({
@@ -33,9 +33,9 @@ export default function AdminModal({
             <X size={18} />
           </button>
         </div>
-        {children}
+        <div className="px-6 py-5">{children}</div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

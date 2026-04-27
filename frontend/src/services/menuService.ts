@@ -79,6 +79,14 @@ export const splashService = {
   },
 };
 
+// Returns a map of itemId → discountPrice for currently active discounts (UTC)
+export const discountService = {
+  getActive: async (): Promise<Record<string, string>> => {
+    const { data } = await api.get<Record<string, string>>("/discounts");
+    return data;
+  },
+};
+
 export const venueService = {
   getVenue: async (): Promise<VenueInfo> => {
     const { data } = await api.get<VenueInfo>("/venue");

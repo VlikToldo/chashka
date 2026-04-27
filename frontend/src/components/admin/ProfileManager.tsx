@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Check, Mail, ShieldCheck, X } from "lucide-react";
+import { Save, Check, Mail, ShieldCheck, X, Trash2 } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -13,7 +13,8 @@ const inputClass =
   "w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors";
 const labelClass = "text-xs tracking-wide uppercase text-muted-foreground";
 
-const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+const isValidEmail = (v: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 const isValidPassword = (v: string) => v.length >= 8 && /\d/.test(v);
 
 export default function ProfileManager() {
@@ -61,6 +62,11 @@ export default function ProfileManager() {
   const [savingPw, setSavingPw] = useState(false);
   const [savedPw, setSavedPw] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
+
+  // Delete account form
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     adminService
@@ -123,7 +129,9 @@ export default function ProfileManager() {
 
     setSavingEmail(true);
     try {
-      const updated = await adminService.updateProfile({ email: newEmail.trim() });
+      const updated = await adminService.updateProfile({
+        email: newEmail.trim(),
+      });
       setProfile(updated);
       setNewEmail("");
       setEmailChangeSent(true);
@@ -166,7 +174,9 @@ export default function ProfileManager() {
     setPwError(null);
 
     if (!isValidPassword(pwForm.newPassword)) {
-      setPwError("Пароль має бути мінімум 8 символів та містити хоча б одну цифру");
+      setPwError(
+        "Пароль має бути мінімум 8 символів та містити хоча б одну цифру",
+      );
       return;
     }
     if (pwForm.newPassword !== pwForm.confirmPassword) {
@@ -176,7 +186,10 @@ export default function ProfileManager() {
 
     setSavingPw(true);
     try {
-      await adminService.changePassword(pwForm.currentPassword, pwForm.newPassword);
+      await adminService.changePassword(
+        pwForm.currentPassword,
+        pwForm.newPassword,
+      );
       setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setSavedPw(true);
       setTimeout(() => setSavedPw(false), 2500);
@@ -256,7 +269,9 @@ export default function ProfileManager() {
         {/* Current email */}
         <div className="space-y-1">
           <label className={labelClass}>{p.email}</label>
-          <p className="py-2 text-sm border-b border-border/50">{profile.email}</p>
+          <p className="py-2 text-sm border-b border-border/50">
+            {profile.email}
+          </p>
         </div>
 
         {/* Pending email banner */}
@@ -272,7 +287,11 @@ export default function ProfileManager() {
                 disabled={resendingEmail || resentEmail}
                 className="mt-2 text-xs underline text-blue-700 hover:text-blue-900 transition-colors disabled:opacity-50"
               >
-                {resentEmail ? p.resentEmailChange : resendingEmail ? "..." : p.resendEmailChange}
+                {resentEmail
+                  ? p.resentEmailChange
+                  : resendingEmail
+                    ? "..."
+                    : p.resendEmailChange}
               </button>
             </div>
             <button
@@ -372,6 +391,52 @@ export default function ProfileManager() {
         <Button type="submit" disabled={savingPw} className="px-5 py-2">
           {savedPw ? <Check size={14} /> : <Save size={14} />}
           {savingPw ? c.saving : savedPw ? c.saved : c.save}
+        </Button>
+      </form>
+
+      {/* Delete account */}
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setDeleteError(null);
+          setDeletingAccount(true);
+          try {
+            await adminService.deleteAccount(deletePassword);
+            localStorage.removeItem("admin_token");
+            localStorage.removeItem("admin_user");
+            window.location.href = "/admin/login";
+          } catch (err) {
+            setDeleteError(err instanceof Error ? err.message : c.errorDelete);
+          } finally {
+            setDeletingAccount(false);
+          }
+        }}
+        className="space-y-4 border border-red-200 rounded-lg p-5"
+      >
+        <SectionTitle>
+          <span className="text-red-600">{p.deleteAccountTitle}</span>
+        </SectionTitle>
+        <p className="text-sm text-muted-foreground">{p.deleteAccountHint}</p>
+
+        <div className="space-y-1">
+          <label className={labelClass}>{p.deleteAccountPasswordLabel}</label>
+          <PasswordInput
+            value={deletePassword}
+            onChange={setDeletePassword}
+            required
+            autoComplete="current-password"
+          />
+        </div>
+
+        {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
+
+        <Button
+          type="submit"
+          disabled={deletingAccount || !deletePassword}
+          className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white border-red-600"
+        >
+          <Trash2 size={14} />
+          {deletingAccount ? p.deleteAccountDeleting : p.deleteAccountBtn}
         </Button>
       </form>
     </div>

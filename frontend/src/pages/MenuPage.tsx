@@ -9,14 +9,17 @@ import { useMenuSections } from "../hooks/useMenuSections";
 import { useLanguage } from "../context/LanguageContext";
 import { localize } from "../utils/localize";
 import { useSeoMeta } from "../hooks/useSeoMeta";
+import { discountService } from "../services/menuService";
 import type { MenuItem } from "../types/menu";
 
 const ExtraRow = memo(function ExtraRow({
   item,
   index = 0,
+  discountPrice,
 }: {
   item: MenuItem;
   index?: number;
+  discountPrice?: string;
 }) {
   const { lang } = useLanguage();
   const name = localize(item.name, lang);
@@ -41,9 +44,20 @@ const ExtraRow = memo(function ExtraRow({
           </span>
         )}
       </div>
-      <span className="text-base font-light tabular-nums shrink-0">
-        {item.price}
-      </span>
+      {discountPrice ? (
+        <span className="flex items-baseline gap-1.5 shrink-0">
+          <s className="text-sm text-muted-foreground/60 tabular-nums">
+            {item.price}
+          </s>
+          <span className="text-base font-light tabular-nums text-primary">
+            {discountPrice}
+          </span>
+        </span>
+      ) : (
+        <span className="text-base font-light tabular-nums shrink-0">
+          {item.price}
+        </span>
+      )}
     </motion.div>
   );
 });
@@ -64,7 +78,15 @@ export default function MenuPage() {
   } = useMenuSections();
 
   const [extrasActive, setExtrasActive] = useState(false);
+  const [discounts, setDiscounts] = useState<Record<string, string>>({});
   const contentRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    discountService
+      .getActive()
+      .then(setDiscounts)
+      .catch(() => {});
+  }, []);
 
   // Reset extras tab when category changes
   useEffect(() => {
@@ -126,7 +148,10 @@ export default function MenuPage() {
         {(["food", "drinks"] as const).map((cat) => (
           <button
             key={cat}
-            onClick={() => { setCategoryFilter(cat); scrollToContent(); }}
+            onClick={() => {
+              setCategoryFilter(cat);
+              scrollToContent();
+            }}
             className={`px-10 py-3 text-sm tracking-[0.2em] uppercase transition-colors ${
               categoryFilter === cat
                 ? "text-foreground border-b-2 border-foreground -mb-px"
@@ -140,7 +165,10 @@ export default function MenuPage() {
 
       {/* Section nav */}
       {filteredSections.length > 0 && (
-        <nav aria-label="Menu sections" className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <nav
+          aria-label="Menu sections"
+          className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border"
+        >
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex justify-center gap-1 md:gap-8 py-4 overflow-x-auto">
               {filteredSections.map((section, i) => (
@@ -176,7 +204,10 @@ export default function MenuPage() {
                     ease: "easeOut",
                     delay: filteredSections.length * 0.06,
                   }}
-                  onClick={() => { setExtrasActive(true); scrollToContent(); }}
+                  onClick={() => {
+                    setExtrasActive(true);
+                    scrollToContent();
+                  }}
                   className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
                     extrasActive
                       ? "text-foreground border-b-2 border-foreground"
@@ -192,7 +223,10 @@ export default function MenuPage() {
       )}
 
       {/* Content */}
-      <section ref={contentRef} className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+      <section
+        ref={contentRef}
+        className="max-w-7xl mx-auto px-6 py-12 md:py-20"
+      >
         {loading && <Loader />}
         {error && (
           <p className="text-center text-red-500 py-20">{t.menu.error}</p>
@@ -218,6 +252,7 @@ export default function MenuPage() {
                     }
                     item={item}
                     index={i}
+                    discountPrice={item._id ? discounts[item._id] : undefined}
                   />
                 ))}
               </div>
@@ -230,6 +265,7 @@ export default function MenuPage() {
             title={localize(activeSection.name, lang)}
             items={items}
             extras={sectionExtras}
+            discounts={discounts}
           />
         )}
         {!loading && !error && filteredSections.length === 0 && (

@@ -138,94 +138,83 @@ export default function MenuPage() {
         </motion.div>
       </section>
 
-      {/* Food / Drinks toggle */}
-      <motion.div
-        className="flex justify-center gap-0 border-b border-border"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-      >
-        {(["food", "drinks"] as const).map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              setCategoryFilter(cat);
-              scrollToContent();
-            }}
-            className={`px-10 py-3 text-sm tracking-[0.2em] uppercase transition-colors ${
-              categoryFilter === cat
-                ? "text-foreground border-b-2 border-foreground -mb-px"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {cat === "food" ? t.menu.food : t.menu.drinks}
-          </button>
-        ))}
-      </motion.div>
-
-      {/* Section nav */}
-      {filteredSections.length > 0 && (
-        <nav
-          aria-label="Menu sections"
-          className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border"
+      {/* Sticky header: category toggle + section nav */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
+        {/* Food / Drinks toggle */}
+        <motion.div
+          className="flex justify-center gap-0 border-b border-border"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex justify-center gap-1 md:gap-8 py-4 overflow-x-auto">
-              {filteredSections.map((section, i) => (
-                <motion.button
-                  key={section._id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    ease: "easeOut",
-                    delay: i * 0.06,
-                  }}
-                  onClick={() => {
-                    setActiveSection(section);
-                    setExtrasActive(false);
-                    scrollToContent();
-                  }}
-                  className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
-                    !extrasActive && activeSection?._id === section._id
-                      ? "text-foreground border-b-2 border-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {localize(section.name, lang)}
-                </motion.button>
-              ))}
-              {categoryExtras.length > 0 && (
-                <motion.button
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    ease: "easeOut",
-                    delay: filteredSections.length * 0.06,
-                  }}
-                  onClick={() => {
-                    setExtrasActive(true);
-                    scrollToContent();
-                  }}
-                  className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
-                    extrasActive
-                      ? "text-foreground border-b-2 border-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.menu.extrasTab}
-                </motion.button>
-              )}
+          {(["food", "drinks"] as const).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setCategoryFilter(cat);
+                scrollToContent();
+              }}
+              className={`px-10 py-3 text-sm tracking-[0.2em] uppercase transition-colors ${
+                categoryFilter === cat
+                  ? "text-foreground border-b-2 border-foreground -mb-px"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {cat === "food" ? t.menu.food : t.menu.drinks}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Section nav */}
+        {filteredSections.length > 0 && (
+          <nav
+            aria-label="Menu sections"
+            className="border-b border-border"
+          >
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="flex justify-center gap-1 md:gap-8 py-4 overflow-x-auto">
+                {filteredSections.map((section) => (
+                  <button
+                    key={section._id}
+                    onClick={() => {
+                      setActiveSection(section);
+                      setExtrasActive(false);
+                      scrollToContent();
+                    }}
+                    className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
+                      !extrasActive && activeSection?._id === section._id
+                        ? "text-foreground border-b-2 border-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {localize(section.name, lang)}
+                  </button>
+                ))}
+                {categoryExtras.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setExtrasActive(true);
+                      scrollToContent();
+                    }}
+                    className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
+                      extrasActive
+                        ? "text-foreground border-b-2 border-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t.menu.extrasTab}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </nav>
-      )}
+          </nav>
+        )}
+      </div>
 
       {/* Content */}
       <section
         ref={contentRef}
-        className="max-w-7xl mx-auto px-6 py-12 md:py-20"
+        className="max-w-7xl mx-auto px-6 pt-20 pb-12 md:pt-28 md:pb-20"
       >
         {loading && <Loader />}
         {error && (

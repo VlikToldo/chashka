@@ -214,7 +214,7 @@ export default function MenuPage() {
       {/* Content */}
       <section
         ref={contentRef}
-        className="max-w-7xl mx-auto px-6 py-12 md:py-20"
+        className="max-w-7xl mx-auto px-6 pt-20 pb-12 md:pt-28 md:pb-20"
       >
         {loading && <Loader />}
         {error && (

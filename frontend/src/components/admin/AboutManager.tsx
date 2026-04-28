@@ -290,6 +290,7 @@ export default function AboutManager() {
     if (!textFilled) { setError(c.errorSave); return; }
     setSaving(true);
     setError(null);
+    const uploadedUrls: string[] = [];
     try {
       // 1. Save text content
       let block: AboutBlock;
@@ -305,6 +306,7 @@ export default function AboutManager() {
       for (const img of localImages) {
         if (img.file) {
           const { url } = await adminService.uploadAboutBlockImage(id, img.file);
+          uploadedUrls.push(url);
           finalImages.push({ url, position: positionToString(img.position) });
         } else if (img.cloudUrl) {
           finalImages.push({ url: img.cloudUrl, position: positionToString(img.position) });
@@ -322,6 +324,12 @@ export default function AboutManager() {
       showToast(c.saved, "success");
       setShowForm(false);
     } catch (err) {
+      // Cleanup images uploaded to Cloudinary but not persisted to DB
+      if (uploadedUrls.length > 0) {
+        await Promise.allSettled(
+          uploadedUrls.map((url) => adminService.deleteAboutImage(url)),
+        );
+      }
       setError(err instanceof Error ? err.message : c.errorSave);
     } finally {
       setSaving(false);

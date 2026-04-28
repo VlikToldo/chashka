@@ -8,6 +8,7 @@ import {
   reorderAbout,
   uploadAboutImage as uploadImage,
   updateAboutImages,
+  deleteAboutImage,
 } from "../../controllers/admin/aboutController.js";
 import { validate } from "../../middleware/validate.js";
 import { createAboutSchema, updateAboutSchema } from "../../schemas/index.js";
@@ -17,6 +18,7 @@ router.get("/", getAbout);
 router.post("/", validate(createAboutSchema), createAbout);
 router.put("/reorder", reorderAbout);
 router.put("/:id", validate(updateAboutSchema), updateAbout);
+router.delete("/image", deleteAboutImage);
 router.delete("/:id", deleteAbout);
 router.post("/:id/image", uploadAboutImage.single("image"), uploadImage);
 router.put("/:id/images", updateAboutImages);

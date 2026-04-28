@@ -103,7 +103,7 @@ export default function MenuPage() {
   useSeoMeta({
     title: `CHASHKA | ${t.hero.subtitle} — El Campello, Valencia`,
     description: t.hero.description,
-    ogImage: `${siteUrl}/images/logo.png`,
+    ogImage: `${siteUrl}/images/og-image.jpg`,
     canonical: `${siteUrl}/`,
     lang,
   });

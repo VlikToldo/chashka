@@ -242,6 +242,10 @@ export const adminService = {
     return data;
   },
 
+  deleteAboutImage: async (url: string): Promise<void> => {
+    await api.delete("/about/image", { data: { url } });
+  },
+
   // Profile
   getProfile: async (): Promise<AdminProfile> => {
     const { data } = await api.get("/profile");

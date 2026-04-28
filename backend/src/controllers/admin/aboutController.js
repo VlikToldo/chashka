@@ -95,6 +95,14 @@ export async function uploadAboutImage(req, res) {
   res.json({ url: req.file.path });
 }
 
+// Delete a single Cloudinary image by URL (cleanup for uploads not persisted to DB)
+export async function deleteAboutImage(req, res) {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: "url required" });
+  await deleteCloudinaryImage(url);
+  res.json({ success: true });
+}
+
 // Replace the entire images array for a block
 export async function updateAboutImages(req, res) {
   const { images } = req.body;

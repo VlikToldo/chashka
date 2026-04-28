@@ -60,7 +60,7 @@ export default function AboutPage() {
   useSeoMeta({
     title: `${t.about.heroTitle} | CHASHKA — El Campello, Valencia`,
     description: t.about.seoDescription,
-    ogImage: `${siteUrl}/images/logo.png`,
+    ogImage: `${siteUrl}/images/og-image.jpg`,
     canonical: `${siteUrl}/about`,
     lang,
   });

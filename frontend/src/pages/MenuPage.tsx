@@ -81,10 +81,10 @@ export default function MenuPage() {
 
   const stickyHeight = () => stickyRef.current?.offsetHeight ?? 120;
 
-  const scrollToContent = () => {
+  const scrollToContent = (instant = false) => {
     if (!contentRef.current) return;
     const top = contentRef.current.offsetTop - stickyHeight();
-    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    window.scrollTo({ top: Math.max(0, top), behavior: instant ? "instant" : "smooth" });
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -148,7 +148,7 @@ export default function MenuPage() {
               key={cat}
               onClick={() => {
                 setCategoryFilter(cat);
-                scrollToContent();
+                scrollToContent(true);
               }}
               className={`px-10 py-3 text-sm tracking-[0.2em] uppercase transition-colors ${
                 categoryFilter === cat

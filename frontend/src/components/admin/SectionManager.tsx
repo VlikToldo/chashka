@@ -573,7 +573,7 @@ export default function SectionManager() {
 
           {/* Mobile tab toggle */}
           <div className="sm:hidden space-y-4">
-            <div className="flex border border-border">
+            <div className="flex border border-border rounded-lg overflow-hidden">
               {(["food", "drinks"] as const).map((cat) => (
                 <button
                   key={cat}
@@ -628,6 +628,7 @@ export default function SectionManager() {
         <AdminModal
           title={modalSection ? a.modalEditTitle : a.modalCreateTitle}
           onClose={closeModal}
+          noPadding
         >
           {/* Section form */}
           <div className="px-6 py-5 space-y-5 border-b border-border">
@@ -714,7 +715,7 @@ export default function SectionManager() {
 
             {/* Add extra form — only when section saved */}
             {activeSectionId && (
-              <div className="border border-border/60 p-4 space-y-4 bg-muted/10">
+              <div className="border border-border/60 rounded-lg p-4 space-y-4 bg-muted/10">
                 <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
                   {a.extrasAddBtn}
                 </p>
@@ -726,7 +727,7 @@ export default function SectionManager() {
                   placeholder={a.extrasNameLabel}
                 />
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   {/* Yield */}
                   <div className="flex-1 space-y-1">
                     <label className="text-xs tracking-wide uppercase text-muted-foreground">
@@ -800,7 +801,7 @@ export default function SectionManager() {
                 <button
                   onClick={handleAddExtra}
                   disabled={addingExtra}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-foreground text-xs tracking-wide uppercase hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-foreground rounded-lg text-xs tracking-wide uppercase hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
                 >
                   {addingExtra ? (
                     <Loader2 size={12} className="animate-spin" />

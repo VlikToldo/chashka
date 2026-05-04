@@ -6,6 +6,8 @@ interface Props {
   onClose: () => void;
   children: React.ReactNode;
   maxWidth?: string;
+  /** When true, skips the default px-6 py-5 content wrapper — use when children manage their own padding */
+  noPadding?: boolean;
 }
 
 export default function AdminModal({
@@ -13,6 +15,7 @@ export default function AdminModal({
   onClose,
   children,
   maxWidth = "max-w-xl",
+  noPadding = false,
 }: Props) {
   return createPortal(
     <div
@@ -33,7 +36,7 @@ export default function AdminModal({
             <X size={18} />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+        {noPadding ? children : <div className="px-6 py-5">{children}</div>}
       </div>
     </div>,
     document.body,

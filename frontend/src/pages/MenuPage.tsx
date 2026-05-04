@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MenuSection from "../components/MenuSection";
@@ -10,57 +10,6 @@ import { useLanguage } from "../context/LanguageContext";
 import { localize } from "../utils/localize";
 import { useSeoMeta } from "../hooks/useSeoMeta";
 import { discountService } from "../services/menuService";
-import type { MenuItem } from "../types/menu";
-
-const ExtraRow = memo(function ExtraRow({
-  item,
-  index = 0,
-  discountPrice,
-}: {
-  item: MenuItem;
-  index?: number;
-  discountPrice?: string;
-}) {
-  const { lang } = useLanguage();
-  const name = localize(item.name, lang);
-  const yieldVal = localize(item.yield, lang);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{
-        duration: 0.4,
-        ease: "easeOut",
-        delay: Math.min(index * 0.04, 0.3),
-      }}
-      className="flex items-center justify-between gap-4 py-4 border-b border-border/50 last:border-b-0"
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-base font-light">{name}</span>
-        {yieldVal && (
-          <span className="text-xs text-muted-foreground/60 shrink-0">
-            {yieldVal}
-          </span>
-        )}
-      </div>
-      {discountPrice ? (
-        <span className="flex items-baseline gap-1.5 shrink-0">
-          <s className="text-sm text-muted-foreground/60 tabular-nums">
-            {item.price}
-          </s>
-          <span className="text-base font-light tabular-nums text-primary">
-            {discountPrice}
-          </span>
-        </span>
-      ) : (
-        <span className="text-base font-light tabular-nums shrink-0">
-          {item.price}
-        </span>
-      )}
-    </motion.div>
-  );
-});
 
 export default function MenuPage() {
   const { t, lang } = useLanguage();
@@ -68,18 +17,19 @@ export default function MenuPage() {
     filteredSections,
     categoryFilter,
     setCategoryFilter,
-    activeSection,
-    setActiveSection,
-    items,
-    categoryExtras,
-    sectionExtras,
+    itemsMap,
+    allExtras,
     loading,
     error,
   } = useMenuSections();
 
-  const [extrasActive, setExtrasActive] = useState(false);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [discounts, setDiscounts] = useState<Record<string, string>>({});
+
   const contentRef = useRef<HTMLElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   useEffect(() => {
     discountService
@@ -88,14 +38,60 @@ export default function MenuPage() {
       .catch(() => {});
   }, []);
 
-  // Reset extras tab when category changes
+  // Reset active section when category changes
   useEffect(() => {
-    setExtrasActive(false);
-  }, [categoryFilter]);
+    setActiveSectionId(filteredSections[0]?._id ?? null);
+  }, [categoryFilter, filteredSections]);
+
+  // Scroll spy: track which section is currently in view
+  useEffect(() => {
+    if (!filteredSections.length) return;
+
+    const handleScroll = () => {
+      const stickyHeight = stickyRef.current?.offsetHeight ?? 120;
+      const offset = stickyHeight + 32;
+
+      // Last section whose top edge is at or above the offset line
+      let currentId = filteredSections[0]?._id ?? null;
+      for (const section of filteredSections) {
+        const el = sectionRefs.current.get(section._id);
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= offset) {
+          currentId = section._id;
+        }
+      }
+      setActiveSectionId(currentId);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [filteredSections]);
+
+  // Auto-scroll the nav bar to keep active tab visible
+  useEffect(() => {
+    if (!activeSectionId || !navRef.current) return;
+    const btn = navRef.current.querySelector<HTMLElement>(
+      `[data-section-id="${activeSectionId}"]`,
+    );
+    if (btn) {
+      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [activeSectionId]);
+
+  const stickyHeight = () => stickyRef.current?.offsetHeight ?? 120;
 
   const scrollToContent = () => {
     if (!contentRef.current) return;
-    const top = contentRef.current.offsetTop - 64;
+    const top = contentRef.current.offsetTop - stickyHeight();
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    const el = sectionRefs.current.get(sectionId);
+    if (!el) return;
+    const top =
+      el.getBoundingClientRect().top + window.scrollY - stickyHeight() - 16;
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
@@ -139,7 +135,7 @@ export default function MenuPage() {
       </section>
 
       {/* Sticky header: category toggle + section nav */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
+      <div ref={stickyRef} className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         {/* Food / Drinks toggle */}
         <motion.div
           className="flex justify-center gap-0 border-b border-border"
@@ -167,22 +163,20 @@ export default function MenuPage() {
 
         {/* Section nav */}
         {filteredSections.length > 0 && (
-          <nav
-            aria-label="Menu sections"
-            className="border-b border-border"
-          >
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="flex justify-center gap-1 md:gap-8 py-4 overflow-x-auto">
+          <nav aria-label="Menu sections" className="border-b border-border">
+            <div
+              ref={navRef}
+              className="overflow-x-auto [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none" }}
+            >
+              <div className="flex gap-1 md:gap-8 py-4 px-6 w-max mx-auto">
                 {filteredSections.map((section) => (
                   <button
                     key={section._id}
-                    onClick={() => {
-                      setActiveSection(section);
-                      setExtrasActive(false);
-                      scrollToContent();
-                    }}
+                    data-section-id={section._id}
+                    onClick={() => scrollToSection(section._id)}
                     className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
-                      !extrasActive && activeSection?._id === section._id
+                      activeSectionId === section._id
                         ? "text-foreground border-b-2 border-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -190,78 +184,47 @@ export default function MenuPage() {
                     {localize(section.name, lang)}
                   </button>
                 ))}
-                {categoryExtras.length > 0 && (
-                  <button
-                    onClick={() => {
-                      setExtrasActive(true);
-                      scrollToContent();
-                    }}
-                    className={`px-4 py-2 text-sm md:text-base tracking-wide whitespace-nowrap transition-all duration-300 ${
-                      extrasActive
-                        ? "text-foreground border-b-2 border-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t.menu.extrasTab}
-                  </button>
-                )}
               </div>
             </div>
           </nav>
         )}
       </div>
 
-      {/* Content */}
+      {/* Content — all sections rendered at once for scroll */}
       <section
         ref={contentRef}
-        className="max-w-7xl mx-auto px-6 pt-20 pb-12 md:pt-28 md:pb-20"
+        className="max-w-7xl mx-auto px-6 pt-16 pb-12 md:pt-20 md:pb-20"
       >
         {loading && <Loader />}
         {error && (
           <p className="text-center text-red-500 py-20">{t.menu.error}</p>
         )}
 
-        {!loading && !error && extrasActive && (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="extras-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <h2 className="text-3xl md:text-4xl font-light text-center mb-12 md:mb-16">
-                {t.menu.extrasTab}
-              </h2>
-              <div className="max-w-3xl mx-auto">
-                {categoryExtras.map((item, i) => (
-                  <ExtraRow
-                    key={
-                      item._id ?? item.name.es ?? item.name.uk ?? item.name.en
-                    }
-                    item={item}
-                    index={i}
-                    discountPrice={item._id ? discounts[item._id] : undefined}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
-
-        {!loading && !error && !extrasActive && activeSection && (
-          <MenuSection
-            title={localize(activeSection.name, lang)}
-            items={items}
-            extras={sectionExtras}
-            discounts={discounts}
-          />
-        )}
         {!loading && !error && filteredSections.length === 0 && (
           <p className="text-center text-muted-foreground py-20">
             {t.menu.noItems}
           </p>
         )}
+
+        {!loading &&
+          !error &&
+          filteredSections.map((section) => (
+            <div
+              key={section._id}
+              ref={(el) => {
+                if (el) sectionRefs.current.set(section._id, el);
+                else sectionRefs.current.delete(section._id);
+              }}
+              className="mb-24 md:mb-32 last:mb-0"
+            >
+              <MenuSection
+                title={localize(section.name, lang)}
+                items={itemsMap[section._id] ?? []}
+                extras={allExtras.filter((e) => e.sectionId === section._id)}
+                discounts={discounts}
+              />
+            </div>
+          ))}
       </section>
 
       <Footer />

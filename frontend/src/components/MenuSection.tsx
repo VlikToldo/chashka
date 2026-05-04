@@ -323,7 +323,7 @@ export default function MenuSection({
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground/60 text-center mb-5">
               {t.menu.extras}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 border border-border/40 bg-muted/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 border border-border/40 bg-muted/20 rounded-lg overflow-hidden">
               {extras.map((item, i) => (
                 <ExtraItem
                   key={item._id ?? item.name.es ?? item.name.uk ?? item.name.en}

@@ -89,6 +89,8 @@ export function useMenuSections() {
     activeSection,
     setActiveSection,
     items,
+    itemsMap,
+    allExtras,
     categoryExtras,
     sectionExtras,
     loading,

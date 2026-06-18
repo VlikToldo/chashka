@@ -275,7 +275,11 @@ export default function CoverPhotoManager() {
             <div
               ref={circleRef}
               className="rounded-full overflow-hidden bg-muted border-2 border-border cursor-grab active:cursor-grabbing select-none relative"
-              style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+              style={{
+                width: CIRCLE_SIZE,
+                height: CIRCLE_SIZE,
+                touchAction: "none",
+              }}
               onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}

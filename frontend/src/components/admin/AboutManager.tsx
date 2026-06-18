@@ -43,10 +43,10 @@ const EMPTY_FORM = { title: { ...EMPTY_L }, text: { ...EMPTY_L } };
 // One image slot in the editor
 interface LocalImage {
   key: string;
-  preview: string;        // blob URL (new) or cloudinary URL (existing)
+  preview: string; // blob URL (new) or cloudinary URL (existing)
   position: PhotoPosition;
-  file?: File;            // set only for newly selected files
-  cloudUrl?: string;      // set for already-saved images
+  file?: File; // set only for newly selected files
+  cloudUrl?: string; // set for already-saved images
 }
 
 let keyCounter = 0;
@@ -74,8 +74,18 @@ export default function AboutManager() {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
-  const touchState = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
+  const dragState = useRef<{
+    x: number;
+    y: number;
+    posX: number;
+    posY: number;
+  } | null>(null);
+  const touchState = useRef<{
+    x: number;
+    y: number;
+    posX: number;
+    posY: number;
+  } | null>(null);
 
   useEffect(() => {
     adminService
@@ -87,13 +97,19 @@ export default function AboutManager() {
 
   // ─── helpers ────────────────────────────────────────────────────────────────
 
-  const activeImage = activeIdx !== null ? localImages[activeIdx] ?? null : null;
+  const activeImage =
+    activeIdx !== null ? (localImages[activeIdx] ?? null) : null;
 
-  const setActivePos = useCallback((pos: PhotoPosition) => {
-    setLocalImages((prev) =>
-      prev.map((img, i) => (i === activeIdx ? { ...img, position: pos } : img)),
-    );
-  }, [activeIdx]);
+  const setActivePos = useCallback(
+    (pos: PhotoPosition) => {
+      setLocalImages((prev) =>
+        prev.map((img, i) =>
+          i === activeIdx ? { ...img, position: pos } : img,
+        ),
+      );
+    },
+    [activeIdx],
+  );
 
   // ─── open / close ────────────────────────────────────────────────────────────
 
@@ -126,7 +142,13 @@ export default function AboutManager() {
           setLocalImages((prev) =>
             prev.map((li) =>
               li.cloudUrl === img.url && li.position.ar === undefined
-                ? { ...li, position: { ...li.position, ar: tmp.naturalWidth / tmp.naturalHeight } }
+                ? {
+                    ...li,
+                    position: {
+                      ...li.position,
+                      ar: tmp.naturalWidth / tmp.naturalHeight,
+                    },
+                  }
                 : li,
             ),
           );
@@ -192,7 +214,9 @@ export default function AboutManager() {
         ),
       );
     };
-    const onUp = () => { dragState.current = null; };
+    const onUp = () => {
+      dragState.current = null;
+    };
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
     return () => {
@@ -209,7 +233,10 @@ export default function AboutManager() {
       const delta = e.deltaY > 0 ? -0.08 : 0.08;
       setActivePos(
         clampPosition(
-          { ...activeImage.position, scale: Math.max(1, Math.min(4, activeImage.position.scale + delta)) },
+          {
+            ...activeImage.position,
+            scale: Math.max(1, Math.min(4, activeImage.position.scale + delta)),
+          },
           FRAME_AR,
         ),
       );
@@ -273,7 +300,13 @@ export default function AboutManager() {
         clampPosition(
           {
             ...activeImage.position,
-            scale: Math.max(1, Math.min(4, activeImage.position.scale + (dir === "in" ? 0.15 : -0.15))),
+            scale: Math.max(
+              1,
+              Math.min(
+                4,
+                activeImage.position.scale + (dir === "in" ? 0.15 : -0.15),
+              ),
+            ),
           },
           FRAME_AR,
         ),
@@ -287,7 +320,10 @@ export default function AboutManager() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const textFilled = Object.values(form.text).some((v) => v.trim() !== "");
-    if (!textFilled) { setError(c.errorSave); return; }
+    if (!textFilled) {
+      setError(c.errorSave);
+      return;
+    }
     setSaving(true);
     setError(null);
     const uploadedUrls: string[] = [];
@@ -305,16 +341,25 @@ export default function AboutManager() {
       const finalImages: { url: string; position: string }[] = [];
       for (const img of localImages) {
         if (img.file) {
-          const { url } = await adminService.uploadAboutBlockImage(id, img.file);
+          const { url } = await adminService.uploadAboutBlockImage(
+            id,
+            img.file,
+          );
           uploadedUrls.push(url);
           finalImages.push({ url, position: positionToString(img.position) });
         } else if (img.cloudUrl) {
-          finalImages.push({ url: img.cloudUrl, position: positionToString(img.position) });
+          finalImages.push({
+            url: img.cloudUrl,
+            position: positionToString(img.position),
+          });
         }
       }
 
       // 3. Replace entire images array (also clears deleted ones)
-      const updated = await adminService.updateAboutBlockImages(id, finalImages);
+      const updated = await adminService.updateAboutBlockImages(
+        id,
+        finalImages,
+      );
 
       setBlocks((prev) =>
         editingId
@@ -355,10 +400,15 @@ export default function AboutManager() {
     const newBlocks = [...blocks];
     const target = index + direction;
     if (target < 0 || target >= newBlocks.length) return;
-    [newBlocks[index], newBlocks[target]] = [newBlocks[target], newBlocks[index]];
+    [newBlocks[index], newBlocks[target]] = [
+      newBlocks[target],
+      newBlocks[index],
+    ];
     setBlocks(newBlocks);
     try {
-      await adminService.reorderAboutBlocks(newBlocks.map((b) => b._id as string));
+      await adminService.reorderAboutBlocks(
+        newBlocks.map((b) => b._id as string),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : c.errorSave);
     }
@@ -398,7 +448,9 @@ export default function AboutManager() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{localize(block.title, lang)}</p>
+                  <p className="text-sm font-medium">
+                    {localize(block.title, lang)}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 font-light">
                     {localize(block.text, lang)}
                   </p>
@@ -409,17 +461,35 @@ export default function AboutManager() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1 flex-shrink-0">
-                  <Button variant="ghost" disabled={i === 0} onClick={() => moveBlock(i, -1)} className="p-1">
+                  <Button
+                    variant="ghost"
+                    disabled={i === 0}
+                    onClick={() => moveBlock(i, -1)}
+                    className="p-1"
+                  >
                     <ChevronUp size={13} />
                   </Button>
-                  <Button variant="ghost" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} className="p-1">
+                  <Button
+                    variant="ghost"
+                    disabled={i === blocks.length - 1}
+                    onClick={() => moveBlock(i, 1)}
+                    className="p-1"
+                  >
                     <ChevronDown size={13} />
                   </Button>
                 </div>
-                <Button variant="ghost" onClick={() => openEdit(block)} className="p-1 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  onClick={() => openEdit(block)}
+                  className="p-1 flex-shrink-0"
+                >
                   <Pencil size={14} />
                 </Button>
-                <Button variant="ghost-danger" onClick={() => block._id && setConfirmId(block._id)} className="p-1 flex-shrink-0">
+                <Button
+                  variant="ghost-danger"
+                  onClick={() => block._id && setConfirmId(block._id)}
+                  className="p-1 flex-shrink-0"
+                >
                   <Trash2 size={14} />
                 </Button>
               </li>
@@ -476,13 +546,22 @@ export default function AboutManager() {
                     type="button"
                     onClick={() => setActiveIdx(i)}
                     className={`relative w-16 h-[52px] rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0 ${
-                      activeIdx === i ? "border-foreground" : "border-border hover:border-foreground/50"
+                      activeIdx === i
+                        ? "border-foreground"
+                        : "border-border hover:border-foreground/50"
                     }`}
                   >
-                    <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={img.preview}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                     <span
                       role="button"
-                      onClick={(e) => { e.stopPropagation(); removeImage(i); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(i);
+                      }}
                       className="absolute top-0.5 right-0.5 w-4 h-4 bg-foreground/80 text-background rounded-full flex items-center justify-center hover:bg-foreground transition-colors z-10"
                     >
                       <X size={8} />
@@ -516,18 +595,34 @@ export default function AboutManager() {
                   <div
                     ref={frameRef}
                     className="relative overflow-hidden rounded-xl border border-border bg-muted cursor-grab active:cursor-grabbing select-none"
-                    style={{ width: FRAME_W, height: FRAME_H }}
+                    style={{
+                      width: FRAME_W,
+                      height: FRAME_H,
+                      touchAction: "none",
+                    }}
                     onMouseDown={handleFrameMouseDown}
                     onTouchStart={handleFrameTouchStart}
                     onTouchMove={handleFrameTouchMove}
-                    onTouchEnd={() => { touchState.current = null; }}
+                    onTouchEnd={() => {
+                      touchState.current = null;
+                    }}
                   >
-                    <div style={getWrapperStyle(activeImage.position, FRAME_AR)}>
-                      <img src={activeImage.preview} alt="preview" draggable={false} style={imgStyle} />
+                    <div
+                      style={getWrapperStyle(activeImage.position, FRAME_AR)}
+                    >
+                      <img
+                        src={activeImage.preview}
+                        alt="preview"
+                        draggable={false}
+                        style={imgStyle}
+                      />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2" style={{ width: FRAME_W }}>
+                  <div
+                    className="flex items-center gap-2"
+                    style={{ width: FRAME_W }}
+                  >
                     <button
                       type="button"
                       onClick={() => handleZoom("out")}
@@ -545,7 +640,10 @@ export default function AboutManager() {
                       onChange={(e) =>
                         setActivePos(
                           clampPosition(
-                            { ...activeImage.position, scale: Number(e.target.value) / 100 },
+                            {
+                              ...activeImage.position,
+                              scale: Number(e.target.value) / 100,
+                            },
                             FRAME_AR,
                           ),
                         )
@@ -591,7 +689,12 @@ export default function AboutManager() {
               <Button type="submit" disabled={saving} className="flex-1 py-2.5">
                 {saving ? c.saving : c.save}
               </Button>
-              <Button variant="secondary" type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5">
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-6 py-2.5"
+              >
                 {c.cancel}
               </Button>
             </div>

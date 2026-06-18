@@ -58,6 +58,7 @@ function SectionRow({
     >
       <GripVertical
         size={14}
+        data-drag-grip="true"
         style={{ touchAction: "none" }}
         onPointerDown={(e) => {
           e.stopPropagation();
@@ -139,7 +140,7 @@ function SortableSection({
     if (!el || !item) return;
 
     const onTouchStart = (e: TouchEvent) => {
-      if ((e.target as HTMLElement).closest("button")) return;
+      if (!(e.target as HTMLElement).closest("[data-drag-grip='true']")) return;
       e.preventDefault();
       const touch = e.touches[0];
       const startX = touch.clientX;

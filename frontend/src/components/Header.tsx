@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Instagram, MapPin } from "lucide-react";
+import { Menu, X, Instagram } from "lucide-react";
 import Loader from "./ui/Loader";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
@@ -75,20 +75,14 @@ export default function Header() {
     <header ref={headerRef} className="relative z-50">
       {/* Top bar */}
       <div className="bg-primary/30 py-2 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="hidden md:block w-16" />
-          <p className="text-xs md:text-sm tracking-wide text-foreground/80 text-center flex-1 md:flex-none">
-            {venue.address[lang]}
-          </p>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-            <Link
-              to="/admin/login"
-              className="hidden md:block text-[10px] tracking-[0.15em] uppercase text-foreground/40 hover:text-foreground/70 transition-colors"
-            >
-              Admin
-            </Link>
-          </div>
+        <div className="max-w-7xl mx-auto flex items-center justify-end gap-4">
+          <LanguageSwitcher />
+          <Link
+            to="/admin/login"
+            className="hidden md:block text-[10px] tracking-[0.15em] uppercase text-foreground/40 hover:text-foreground/70 transition-colors"
+          >
+            Admin
+          </Link>
         </div>
       </div>
 
@@ -117,7 +111,7 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="flex flex-col items-center mx-auto md:mx-0">
           <div
-            className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center relative"
+            className="w-[168px] h-[168px] md:w-[288px] md:h-[288px] rounded-full overflow-hidden bg-primary/20 flex items-center justify-center relative"
             style={{
               opacity: logoVisible ? 1 : 0,
               transition: "opacity 1.2s ease",
@@ -206,11 +200,6 @@ export default function Header() {
               </a>
 
               <div className="h-px w-24 bg-border/50" />
-
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin size={13} />
-                <span className="text-xs">{venue.address[lang]}</span>
-              </div>
 
               <div className="h-px w-24 bg-border/50" />
 

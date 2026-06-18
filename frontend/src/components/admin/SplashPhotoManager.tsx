@@ -282,7 +282,11 @@ export default function SplashPhotoManager() {
               <>
                 <div
                   className="relative overflow-hidden rounded-xl border border-border shadow-md select-none cursor-grab active:cursor-grabbing"
-                  style={{ width: FRAME_W, height: FRAME_H }}
+                  style={{
+                    width: FRAME_W,
+                    height: FRAME_H,
+                    touchAction: "none",
+                  }}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     const startPos = {
@@ -524,7 +528,7 @@ export default function SplashPhotoManager() {
             <div
               ref={frameRef}
               className="overflow-hidden rounded-xl bg-muted border-2 border-border cursor-grab active:cursor-grabbing select-none relative"
-              style={{ width: FRAME_W, height: FRAME_H }}
+              style={{ width: FRAME_W, height: FRAME_H, touchAction: "none" }}
               onMouseDown={handleMouseDownEdit}
               onTouchStart={handleTouchStartEdit}
               onTouchMove={handleTouchMoveEdit}

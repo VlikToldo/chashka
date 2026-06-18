@@ -94,7 +94,7 @@ function SortableMenuItem({
     if (!el || !item) return;
 
     const onTouchStart = (e: TouchEvent) => {
-      if ((e.target as HTMLElement).closest("button")) return;
+      if (!(e.target as HTMLElement).closest("[data-drag-grip='true']")) return;
       e.preventDefault();
       const touch = e.touches[0];
       const startX = touch.clientX;
@@ -219,6 +219,7 @@ function SortableMenuItem({
       >
         <GripVertical
           size={14}
+          data-drag-grip="true"
           style={{ touchAction: "none" }}
           onPointerDown={(e) => {
             e.stopPropagation();
@@ -865,7 +866,11 @@ export default function MenuItemManager() {
                     <div
                       ref={editPosFrameRef}
                       className="relative overflow-hidden rounded-lg bg-muted border border-border cursor-grab active:cursor-grabbing select-none"
-                      style={{ width: ITEM_FRAME_W, height: ITEM_FRAME_H }}
+                      style={{
+                        width: ITEM_FRAME_W,
+                        height: ITEM_FRAME_H,
+                        touchAction: "none",
+                      }}
                       onMouseDown={(e) => {
                         e.preventDefault();
                         editPosDragState.current = {

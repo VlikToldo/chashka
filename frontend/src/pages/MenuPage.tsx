@@ -75,7 +75,11 @@ export default function MenuPage() {
       `[data-section-id="${activeSectionId}"]`,
     );
     if (btn) {
-      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      btn.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
     }
   }, [activeSectionId]);
 
@@ -84,7 +88,10 @@ export default function MenuPage() {
   const scrollToContent = (instant = false) => {
     if (!contentRef.current) return;
     const top = contentRef.current.offsetTop - stickyHeight();
-    window.scrollTo({ top: Math.max(0, top), behavior: instant ? "instant" : "smooth" });
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: instant ? "instant" : "smooth",
+    });
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -109,7 +116,7 @@ export default function MenuPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative py-20 md:py-32 px-6 text-center">
+      <section className="relative py-10 md:py-16 px-6 text-center">
         <motion.div
           className="max-w-7xl mx-auto"
           initial={{ opacity: 0, y: 24 }}
@@ -135,7 +142,10 @@ export default function MenuPage() {
       </section>
 
       {/* Sticky header: category toggle + section nav */}
-      <div ref={stickyRef} className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
+      <div
+        ref={stickyRef}
+        className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm"
+      >
         {/* Food / Drinks toggle */}
         <motion.div
           className="flex justify-center gap-0 border-b border-border"
@@ -193,7 +203,7 @@ export default function MenuPage() {
       {/* Content — all sections rendered at once for scroll */}
       <section
         ref={contentRef}
-        className="max-w-7xl mx-auto px-6 pt-16 pb-12 md:pt-20 md:pb-20"
+        className="max-w-7xl mx-auto px-6 pt-12 pb-10 md:pt-16 md:pb-16"
       >
         {loading && <Loader />}
         {error && (

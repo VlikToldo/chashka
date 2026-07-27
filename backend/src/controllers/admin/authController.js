@@ -171,8 +171,8 @@ export async function resetPassword(req, res) {
 
 export async function smtpHealth(_req, res) {
   try {
-    await checkEmailTransport();
-    return res.json({ success: true, smtp: "ok" });
+    const info = await checkEmailTransport();
+    return res.json({ success: true, smtp: "ok", channel: info?.channel });
   } catch (e) {
     return res.status(503).json({
       success: false,

@@ -13,7 +13,10 @@ const BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api/admin`
   : "/api/admin";
 
-const api = axios.create({ baseURL: BASE });
+const api = axios.create({
+  baseURL: BASE,
+  timeout: 15000,
+});
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("admin_token");
@@ -41,6 +44,9 @@ api.interceptors.response.use(
     const message: string =
       error?.response?.data?.message ??
       error?.response?.data?.error ??
+      (error?.code === "ECONNABORTED"
+        ? "Сервер відповідає занадто довго. Спробуйте ще раз."
+        : null) ??
       (error?.code === "ERR_NETWORK"
         ? "Сервер недоступний. Перевірте з'єднання."
         : null) ??

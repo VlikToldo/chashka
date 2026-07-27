@@ -5,6 +5,7 @@ import AdminUser from "../../models/AdminUser.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
+  checkEmailTransport,
 } from "../../services/emailService.js";
 
 const MAX_ADMINS = 3;
@@ -135,15 +136,14 @@ export async function forgotPassword(req, res) {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1h
     await user.save();
 
-    try {
-      await sendPasswordResetEmail(user.email, resetToken);
-    } catch (e) {
+    // Do not block the API response on SMTP availability.
+    // If sending fails, cleanup the token so an undeliverable link cannot be used.
+    sendPasswordResetEmail(user.email, resetToken).catch(async (e) => {
       console.warn("[auth] Failed to send reset email:", e.message);
       user.passwordResetToken = null;
       user.passwordResetExpires = null;
       await user.save();
-      return res.status(500).json({ error: "Failed to send email" });
-    }
+    });
   }
 
   res.json({ success: true });
@@ -167,4 +167,17 @@ export async function resetPassword(req, res) {
   await user.save();
 
   res.json({ success: true });
+}
+
+export async function smtpHealth(_req, res) {
+  try {
+    await checkEmailTransport();
+    return res.json({ success: true, smtp: "ok" });
+  } catch (e) {
+    return res.status(503).json({
+      success: false,
+      smtp: "error",
+      error: e.message || "SMTP check failed",
+    });
+  }
 }

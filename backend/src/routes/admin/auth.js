@@ -6,6 +6,7 @@ import {
   resendVerification,
   forgotPassword,
   resetPassword,
+  smtpHealth,
 } from "../../controllers/admin/authController.js";
 import { authenticateAdmin } from "../../middleware/authenticateAdmin.js";
 import { authLimiter, emailLimiter } from "../../middleware/rateLimiter.js";
@@ -39,4 +40,5 @@ router.post(
   validate(resetPasswordSchema),
   resetPassword,
 );
+router.get("/smtp-health", authenticateAdmin, smtpHealth);
 export default router;

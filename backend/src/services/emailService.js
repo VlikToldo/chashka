@@ -23,6 +23,11 @@ function createTransporter() {
   });
 }
 
+export async function checkEmailTransport() {
+  const transporter = createTransporter();
+  await transporter.verify();
+}
+
 export async function sendVerificationEmail(to, token) {
   const url = `${APP_BASE_URL}/admin/verify-email/${token}`;
   const transporter = createTransporter();

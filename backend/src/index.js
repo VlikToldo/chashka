@@ -55,18 +55,33 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// Render/other PaaS run behind reverse proxies; trust proxy to get real client IP.
+// This is required for express-rate-limit to avoid treating all users as one IP.
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!process.env.ALLOWED_ORIGIN) {
+      if (allowedOrigins.length === 0) {
         // No whitelist configured — block all cross-origin requests
         return callback(new Error("CORS: ALLOWED_ORIGIN is not configured"));
       }
-      // Allow same-origin (no Origin header) or matching origin
-      if (!origin || origin === process.env.ALLOWED_ORIGIN) {
+      // Allow same-origin (no Origin header) or configured origin
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`CORS: origin '${origin}' is not allowed`));
+      return callback(
+        new Error(
+          `CORS: origin '${origin}' is not allowed. Allowed: ${allowedOrigins.join(", ")}`,
+        ),
+      );
     },
   }),
 );

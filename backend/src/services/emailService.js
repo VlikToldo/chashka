@@ -1,6 +1,11 @@
 import nodemailer from "nodemailer";
 
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const APP_BASE_URL =
+  process.env.APP_BASE_URL || allowedOrigins[0] || "http://localhost:5173";
 const FROM = process.env.SMTP_FROM || "noreply@chashka.com.es";
 
 function createTransporter() {
@@ -8,6 +13,9 @@ function createTransporter() {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === "true",
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -16,7 +24,7 @@ function createTransporter() {
 }
 
 export async function sendVerificationEmail(to, token) {
-  const url = `${ALLOWED_ORIGIN}/admin/verify-email/${token}`;
+  const url = `${APP_BASE_URL}/admin/verify-email/${token}`;
   const transporter = createTransporter();
   await transporter.sendMail({
     from: FROM,
@@ -34,7 +42,7 @@ export async function sendVerificationEmail(to, token) {
 }
 
 export async function sendEmailChangeVerification(to, token) {
-  const url = `${ALLOWED_ORIGIN}/admin/verify-email/${token}`;
+  const url = `${APP_BASE_URL}/admin/verify-email/${token}`;
   const transporter = createTransporter();
   await transporter.sendMail({
     from: FROM,
@@ -52,7 +60,7 @@ export async function sendEmailChangeVerification(to, token) {
 }
 
 export async function sendPasswordResetEmail(to, token) {
-  const url = `${ALLOWED_ORIGIN}/admin/reset-password/${token}`;
+  const url = `${APP_BASE_URL}/admin/reset-password/${token}`;
   const transporter = createTransporter();
   await transporter.sendMail({
     from: FROM,

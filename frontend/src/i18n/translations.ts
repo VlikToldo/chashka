@@ -13,12 +13,6 @@ export const translations = {
       about: "NOSOTROS",
       contact: "CONTACTO",
     },
-    hero: {
-      subtitle: "Speciality Coffee Shop",
-      title: "Menú",
-      description:
-        "Café de especialidad cuidadosamente seleccionado de todo el mundo, preparado con amor",
-    },
     categories: {
       coffee: "Café",
       coldDrinks: "Frío",
@@ -306,12 +300,6 @@ export const translations = {
       about: "ABOUT",
       contact: "CONTACT",
     },
-    hero: {
-      subtitle: "Speciality Coffee Shop",
-      title: "Menu",
-      description:
-        "Carefully selected specialty coffee from around the world, made with love",
-    },
     categories: {
       coffee: "Coffee",
       coldDrinks: "Cold",
@@ -594,12 +582,6 @@ export const translations = {
       menu: "МЕНЮ",
       about: "ПРО НАС",
       contact: "КОНТАКТ",
-    },
-    hero: {
-      subtitle: "Speciality Coffee Shop",
-      title: "Меню",
-      description:
-        "Ретельно відібрана кава зі всього світу, приготовлена з любов'ю",
     },
     categories: {
       coffee: "Кава",

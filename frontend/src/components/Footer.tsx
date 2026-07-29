@@ -20,9 +20,6 @@ export default function Footer() {
           <h2 className="text-3xl md:text-4xl font-light tracking-wide mb-2">
             CHASHKA
           </h2>
-          <p className="text-sm text-muted-foreground tracking-[0.2em] uppercase">
-            {t.hero.subtitle}
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
@@ -58,8 +55,10 @@ export default function Footer() {
               >
                 {address}
               </a>
-            ) : !venue.mapEmbedUrl && (
-              <span className="text-sm text-muted-foreground">—</span>
+            ) : (
+              !venue.mapEmbedUrl && (
+                <span className="text-sm text-muted-foreground">—</span>
+              )
             )}
             {venue.mapEmbedUrl && (
               <div className="rounded-xl overflow-hidden border border-border/30 shadow-sm">
@@ -92,7 +91,10 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="inline-block text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                @{venue.instagramUrl.replace(/.*instagram\.com\//i, "").replace(/\/$/, "")}
+                @
+                {venue.instagramUrl
+                  .replace(/.*instagram\.com\//i, "")
+                  .replace(/\/$/, "")}
               </a>
             ) : (
               <span className="text-sm text-muted-foreground">—</span>

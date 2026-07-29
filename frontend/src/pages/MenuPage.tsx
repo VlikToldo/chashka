@@ -104,8 +104,8 @@ export default function MenuPage() {
 
   const siteUrl = import.meta.env.VITE_SITE_URL ?? "https://chashka.com.es";
   useSeoMeta({
-    title: `CHASHKA | ${t.hero.subtitle} — El Campello, Valencia`,
-    description: t.hero.description,
+    title: "CHASHKA — El Campello, Valencia",
+    description: "CHASHKA specialty coffee and menu in El Campello, Valencia.",
     ogImage: `${siteUrl}/images/og-image.jpg`,
     canonical: `${siteUrl}/`,
     lang,
@@ -123,15 +123,9 @@ export default function MenuPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <p className="text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            {t.hero.subtitle}
-          </p>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-light tracking-tight mb-6">
-            {t.hero.title}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-light tracking-tight">
+            {t.nav.menu}
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground font-light max-w-xl mx-auto">
-            {t.hero.description}
-          </p>
           <Link
             to="/about"
             className="inline-block mt-8 text-xs tracking-[0.25em] uppercase text-muted-foreground/60 hover:text-foreground border-b border-transparent hover:border-foreground/30 transition-all duration-300"

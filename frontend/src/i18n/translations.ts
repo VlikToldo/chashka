@@ -577,8 +577,9 @@ export const translations = {
     },
   },
 
+  
   uk: {
-    nav: {
+    nav: { 
       menu: "МЕНЮ",
       about: "ПРО НАС",
       contact: "КОНТАКТ",

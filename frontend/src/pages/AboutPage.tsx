@@ -103,15 +103,6 @@ export default function AboutPage() {
           transition={{ duration: 0.6, ease: "easeOut" as const }}
           className="max-w-5xl mx-auto"
         >
-          <p className="text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            {t.hero.subtitle}
-          </p>
-          <h1 className="text-5xl md:text-7xl font-light tracking-tight mb-6">
-            {t.about.heroTitle}
-          </h1>
-          <p className="text-lg text-muted-foreground font-light">
-            {t.about.heroSubtitle}
-          </p>
           <Link
             to="/"
             className="inline-block mt-8 text-sm tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground border-b border-muted-foreground/30 hover:border-foreground transition-all duration-300 pb-0.5"

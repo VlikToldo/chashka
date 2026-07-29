@@ -79,8 +79,18 @@ export async function checkEmailTransport() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      const message = String(data?.message || data?.error || "");
+      const isSendOnlyKeyError =
+        response.status === 401 &&
+        /restricted to only send emails/i.test(message);
+
+      // Send-only keys cannot read domain metadata, but can still send emails.
+      if (isSendOnlyKeyError) {
+        return { channel: "resend-api", mode: "send-only" };
+      }
+
       throw new Error(
-        `Resend API auth failed (${response.status}): ${data?.message || data?.error || "Unknown error"}`,
+        `Resend API auth failed (${response.status}): ${message || "Unknown error"}`,
       );
     }
 
@@ -100,7 +110,7 @@ export async function checkEmailTransport() {
       }
     }
 
-    return { channel: "resend-api" };
+    return { channel: "resend-api", mode: "full" };
   }
 
   const transporter = createTransporter();

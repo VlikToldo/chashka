@@ -41,6 +41,18 @@ export async function createMenuItem(req, res) {
     translateToAllLanguages(yld),
   ]);
 
+  let nextOrder = order;
+  if (nextOrder === undefined) {
+    const lastItem = await MenuItem.findOne({
+      sectionId,
+      isExtra: !!isExtra,
+    })
+      .sort({ order: -1 })
+      .select("order")
+      .lean();
+    nextOrder = typeof lastItem?.order === "number" ? lastItem.order + 1 : 0;
+  }
+
   const item = await MenuItem.create({
     sectionId,
     name: translatedName,
@@ -49,7 +61,7 @@ export async function createMenuItem(req, res) {
     allergens: translatedAllergens,
     yield: translatedYield,
     isExtra: !!isExtra,
-    order,
+    order: nextOrder,
     ...(imagePosition !== undefined ? { imagePosition } : {}),
   });
   res.status(201).json(item);

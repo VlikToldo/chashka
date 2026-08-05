@@ -77,14 +77,30 @@ export default function AboutPage() {
   const fallbackBlocks: AboutBlock[] = [
     {
       _id: "story",
-      title: { uk: t.about.storyTitle, en: t.about.storyTitle, es: t.about.storyTitle },
-      text: { uk: t.about.storyText, en: t.about.storyText, es: t.about.storyText },
+      title: {
+        uk: t.about.storyTitle,
+        en: t.about.storyTitle,
+        es: t.about.storyTitle,
+      },
+      text: {
+        uk: t.about.storyText,
+        en: t.about.storyText,
+        es: t.about.storyText,
+      },
       images: [],
     },
     {
       _id: "philosophy",
-      title: { uk: t.about.philosophyTitle, en: t.about.philosophyTitle, es: t.about.philosophyTitle },
-      text: { uk: t.about.philosophyText, en: t.about.philosophyText, es: t.about.philosophyText },
+      title: {
+        uk: t.about.philosophyTitle,
+        en: t.about.philosophyTitle,
+        es: t.about.philosophyTitle,
+      },
+      text: {
+        uk: t.about.philosophyText,
+        en: t.about.philosophyText,
+        es: t.about.philosophyText,
+      },
       images: [],
     },
   ];
@@ -96,7 +112,7 @@ export default function AboutPage() {
       <Header />
 
       {/* Hero */}
-      <section className="py-20 md:py-32 px-6 text-center">
+      <section className="relative py-10 md:py-16 px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,7 +121,7 @@ export default function AboutPage() {
         >
           <Link
             to="/"
-            className="inline-block mt-8 text-sm tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground border-b border-muted-foreground/30 hover:border-foreground transition-all duration-300 pb-0.5"
+            className="inline-block mt-4 text-sm tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground border-b border-muted-foreground/30 hover:border-foreground transition-all duration-300 pb-0.5"
           >
             {t.nav.menu}
           </Link>
@@ -151,7 +167,10 @@ export default function AboutPage() {
                             {/* Mobile: horizontal scroll-snap slider */}
                             <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory gap-3 scrollbar-hide pb-1">
                               {images.map((img, idx) => (
-                                <div key={idx} className="flex-none w-[85%] snap-start">
+                                <div
+                                  key={idx}
+                                  className="flex-none w-[85%] snap-start"
+                                >
                                   <BlockImage img={img} alt={title} />
                                 </div>
                               ))}
@@ -268,8 +287,10 @@ export default function AboutPage() {
                 >
                   {address}
                 </a>
-              ) : !venue.mapEmbedUrl && (
-                <span className="text-sm text-muted-foreground">—</span>
+              ) : (
+                !venue.mapEmbedUrl && (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )
               )}
               {venue.mapEmbedUrl && (
                 <div className="rounded-xl overflow-hidden border border-border/30 shadow-sm">
@@ -302,7 +323,10 @@ export default function AboutPage() {
                   rel="noopener noreferrer"
                   className="inline-block text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  @{venue.instagramUrl.replace(/.*instagram\.com\//i, "").replace(/\/$/, "")}
+                  @
+                  {venue.instagramUrl
+                    .replace(/.*instagram\.com\//i, "")
+                    .replace(/\/$/, "")}
                 </a>
               ) : (
                 <span className="text-sm text-muted-foreground">—</span>

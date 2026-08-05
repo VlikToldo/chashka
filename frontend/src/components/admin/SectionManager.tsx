@@ -26,6 +26,88 @@ const EMPTY_EXTRA = {
   priceCurrency: "€",
 };
 
+function SortableExtraRow({
+  extra,
+  lang,
+  onDelete,
+  onAutoScroll,
+}: {
+  extra: AdminMenuItem;
+  lang: Lang;
+  onDelete: (id: string) => void;
+  onAutoScroll: () => void;
+}) {
+  const { controls, onPointerDown, pressing, startDrag } =
+    useLongPressDrag(500);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onPointerDown(e);
+      onAutoScroll();
+    },
+    [onPointerDown, onAutoScroll],
+  );
+
+  const handleGripPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onAutoScroll();
+      startDrag(e);
+    },
+    [startDrag, onAutoScroll],
+  );
+
+  return (
+    <Reorder.Item
+      value={extra}
+      className="list-none"
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => setIsDragging(false)}
+    >
+      <div
+        className={`py-2.5 flex items-center gap-3 select-none transition-shadow duration-150 ${
+          isDragging
+            ? "rounded-sm shadow-md ring-1 ring-foreground/10 bg-background cursor-grabbing"
+            : ""
+        } ${pressing && !isDragging ? "cursor-grab" : ""}`}
+        onPointerDown={handlePointerDown}
+      >
+        <GripVertical
+          size={14}
+          data-drag-grip="true"
+          style={{ touchAction: "none" }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            handleGripPointerDown(e);
+          }}
+          className={`shrink-0 transition-colors duration-200 ${
+            pressing || isDragging
+              ? "text-foreground animate-pulse"
+              : "text-muted-foreground/40"
+          }`}
+        />
+        <span className="flex-1 text-sm">{localize(extra.name, lang)}</span>
+        {extra.yield?.en && (
+          <span className="text-xs text-muted-foreground">
+            {extra.yield.en}
+          </span>
+        )}
+        <span className="text-sm font-light">{extra.price}</span>
+        <Button
+          variant="ghost-danger"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => extra._id && onDelete(extra._id)}
+          className="p-1 shrink-0"
+        >
+          <Trash2 size={13} />
+        </Button>
+      </div>
+    </Reorder.Item>
+  );
+}
+
 function SectionRow({
   s,
   lang,
@@ -503,6 +585,7 @@ export default function SectionManager() {
   const [foodOrder, setFoodOrder] = useState<Section[]>([]);
   const [drinksOrder, setDrinksOrder] = useState<Section[]>([]);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const extrasSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // sync derived lists from sections
   useEffect(() => {
@@ -517,6 +600,21 @@ export default function SectionManager() {
     saveTimer.current = setTimeout(() => {
       adminService
         .reorderSections(newOrder.map((s, i) => ({ id: s._id!, order: i })))
+        .catch(() => showToast(c.errorSave, "error"));
+    }, 500);
+  };
+
+  const handleReorderExtras = (newOrder: AdminMenuItem[]) => {
+    setExtras(newOrder);
+    if (extrasSaveTimer.current) clearTimeout(extrasSaveTimer.current);
+    extrasSaveTimer.current = setTimeout(() => {
+      adminService
+        .reorderMenuItems(
+          newOrder.map((item, i) => ({
+            id: item._id!,
+            order: i,
+          })),
+        )
         .catch(() => showToast(c.errorSave, "error"));
     }, 500);
   };
@@ -690,28 +788,22 @@ export default function SectionManager() {
             ) : extras.length === 0 ? (
               <p className="text-sm text-muted-foreground">{a.extrasEmpty}</p>
             ) : (
-              <ul className="divide-y divide-border/40">
+              <Reorder.Group
+                axis="y"
+                values={extras}
+                onReorder={handleReorderExtras}
+                className="divide-y divide-border/40"
+              >
                 {extras.map((ex) => (
-                  <li key={ex._id} className="py-2.5 flex items-center gap-3">
-                    <span className="flex-1 text-sm">
-                      {localize(ex.name, lang)}
-                    </span>
-                    {ex.yield?.en && (
-                      <span className="text-xs text-muted-foreground">
-                        {ex.yield.en}
-                      </span>
-                    )}
-                    <span className="text-sm font-light">{ex.price}</span>
-                    <Button
-                      variant="ghost-danger"
-                      onClick={() => ex._id && setConfirmExtraId(ex._id)}
-                      className="p-1 shrink-0"
-                    >
-                      <Trash2 size={13} />
-                    </Button>
-                  </li>
+                  <SortableExtraRow
+                    key={ex._id}
+                    extra={ex}
+                    lang={lang}
+                    onDelete={setConfirmExtraId}
+                    onAutoScroll={startAutoScroll}
+                  />
                 ))}
-              </ul>
+              </Reorder.Group>
             )}
 
             {/* Add extra form — only when section saved */}
